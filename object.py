@@ -3,6 +3,7 @@ from typing import Tuple, Optional
 import numpy as np
 from line import Line
 
+
 class Object:
 
     def __init__(self, points):
@@ -64,4 +65,5 @@ class Object:
             self.points = self.points @ matrix
         else:
             self.points = point_matrix + ((self.points - point_matrix) @ matrix)
-        self.points = self.points.astype(int)
+        # self.points = self.points.astype(np.int32)
+        self.points = np.rint(self.points).astype(int) # works well with a point in the center

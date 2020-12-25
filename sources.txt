@@ -1,1 +1,2 @@
 https://stackoverflow.com/questions/9997869/interactive-plot-based-on-tkinter-and-matplotlib
+https://stackoverflow.com/questions/54605404/tkinter-how-to-change-cursor-over-canvas-items
