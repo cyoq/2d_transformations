@@ -1,6 +1,4 @@
-from typing import Tuple, Optional
-
-import numpy as np
+from typing import Tuple
 
 from line import Line
 from pivot import *
@@ -20,18 +18,30 @@ class Object:
         canvas.delete("all")
         self.active_pivots = pivot_type
         if self.active_pivots == MP:
-            self.pivots = [Pivot(canvas, self.center_point[0], self.center_point[1], self.move,width=8)]
+            self.pivots = [Pivot(canvas, self.center_point[0], self.center_point[1], self.move, width=8)]
         elif self.active_pivots == SP:
             self.pivots = [
                 # 2nd and 4th pivot has different arguments for manual_scale function
                 # because x and y's are swapped around
-                Pivot(canvas, self.points[0, 0], self.points[0, 1], lambda x, y: self.manual_point_move(x, y, 0), width=8),
-                Pivot(canvas, self.points[1, 0], self.points[1, 1], lambda x, y: self.manual_point_move(x, y, 3), width=8),
-                Pivot(canvas, self.points[2, 0], self.points[2, 1], lambda x, y: self.manual_point_move(x, y, 2), width=8),
-                Pivot(canvas, self.points[3, 0], self.points[3, 1], lambda x, y: self.manual_point_move(x, y, 1), width=8),
+                Pivot(canvas, self.points[0, 0], self.points[0, 1],
+                      lambda x, y: self.manual_point_move(x, y, 0), width=8),
+                Pivot(canvas, self.points[1, 0], self.points[1, 1],
+                      lambda x, y: self.manual_point_move(x, y, 3), width=8),
+                Pivot(canvas, self.points[2, 0], self.points[2, 1],
+                      lambda x, y: self.manual_point_move(x, y, 2), width=8),
+                Pivot(canvas, self.points[3, 0], self.points[3, 1],
+                      lambda x, y: self.manual_point_move(x, y, 1), width=8),
             ]
         elif self.active_pivots == RP:
-            self.pivots = []
+            radius = self.radius()
+            stationary_pivot = Pivot(canvas, self.center_point[0], self.center_point[1],
+                                     lambda x, y: None, width=8, stationary=True)
+
+            self.pivots = [Pivot(canvas, self.center_point[0] + radius, self.center_point[1],
+                                 lambda a: self.rotate(a, point=self.center_point), width=8,
+                                 angle_based=True, center=stationary_pivot, radius=radius),
+                           stationary_pivot
+                           ]
         else:
             raise Exception("No such pivot type!")
 
@@ -50,6 +60,11 @@ class Object:
             self.points[i, 0] += dx
             self.points[i, 1] += dy
 
+    def radius(self):
+        midx, midy = self.midpoint()
+        vector = (midx - self.points[1, 0], midy - self.points[1, 1])
+        return (vector[0]**2 + vector[1]**2)**0.5
+
     def midpoint(self):
         return ((self.points[0, 0] + self.points[2, 0]) // 2,
                 (self.points[0, 1] + self.points[2, 1]) // 2)
@@ -64,7 +79,9 @@ class Object:
             self.pivots[2].update_pos(self.points[2, 1], self.points[2, 0])
             self.pivots[3].update_pos(self.points[1, 1], self.points[1, 0])
         elif self.active_pivots == RP:
-            pass
+            midx, midy = self.midpoint()
+            self.pivots[1].update_pos(midy, midx)
+            self.pivots[0].update_pos(midy + self.radius(), midx)
         else:
             raise Exception("No such pivot type!")
 
@@ -119,7 +136,7 @@ class Object:
         self.center_point = self.midpoint()
         self.recalculate_pivots()
 
-    def rotate(self, angle: int, point: Optional[Tuple[int]] = None):
+    def rotate(self, angle: int, point: Tuple[int, int] = None):
         if point is not None:
             point_matrix = np.ones((self.points.shape[0], 3))
             point_matrix[:, 0] *= point[0]
