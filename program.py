@@ -1,4 +1,5 @@
 import tkinter as tk
+from collections import deque
 from typing import Tuple
 
 import numpy as np
@@ -16,6 +17,11 @@ class Program(Observer):
         self.master = master
         self.master.title("2D Transformations")
         self.debug = debug
+        if self.debug:
+            self.text = []
+
+        self.image = None
+        self.history = deque()
 
         self.h, self.w = 600, 600
 
@@ -65,10 +71,11 @@ class Program(Observer):
         for p in self.obj.pivots:
             self.register_observer(p)
 
-        tk.Button(frame, text="Scale mode", command=lambda: self.obj.choose_pivot(self.canvas, SP)) \
-            .grid(row=0, column=1)
-        tk.Button(frame, text="Position mode", command=lambda: self.obj.choose_pivot(self.canvas, MP)) \
-            .grid(row=0, column=2)
+
+        # tk.Button(frame, text="Scale mode", command=lambda: self.obj.choose_pivot(self.canvas, SP)) \
+        #     .grid(row=0, column=1)
+        # tk.Button(frame, text="Position mode", command=lambda: self.obj.choose_pivot(self.canvas, MP)) \
+        #     .grid(row=0, column=2)
 
     def rotate(self):
 
@@ -90,6 +97,10 @@ class Program(Observer):
         self.update()
 
     def update(self):
+        # It is needed to clear canvas items, so that no memory leak would appear
+        # self.canvas.delete("all")
+        self.canvas.delete(self.image)
+
         self.canvas_arr = np.zeros((self.h, self.w, 3), dtype=np.uint8)
 
         self.obj.draw(self.canvas_arr)
@@ -97,11 +108,18 @@ class Program(Observer):
 
         self.img = ImageTk.PhotoImage(Image.fromarray(self.canvas_arr.astype(np.uint8)))
 
-        self.canvas.create_image(0, 0, anchor='nw', image=self.img)
-
-        if self.debug:
-            for p in self.obj.points:
-                self.canvas.create_text(p[1] + 10, p[0] + 10, text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red")
+        self.image = self.canvas.create_image(0, 0, anchor='nw', image=self.img)
 
         for p in self.obj.pivots:
             p.draw()
+
+        if self.debug:
+            for t in self.text:
+                self.canvas.delete(t)
+
+            for p in self.obj.points:
+                self.text.append(
+                    self.canvas.create_text(p[1] + 10, p[0] + 10,
+                                            text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red"))
+
+        print(self.canvas.find_all(), "length: ", len(self.canvas.find_all()))
