@@ -7,20 +7,23 @@ from PIL import Image, ImageTk
 from consts import ROT_ANGLE
 from object import Object
 from observer import Observer
-from pivot import Pivot
+from pivot import Pivot, MP, SP
 
 
 class Program(Observer):
 
-    def __init__(self, master, dimensions: Tuple[int, int]):
+    def __init__(self, master, dimensions: Tuple[int, int], debug=False):
         self.master = master
         self.master.title("2D Transformations")
+        self.debug = debug
 
-        self.h, self.w = 300, 300
+        self.h, self.w = 600, 600
+
+        self.canvas = tk.Canvas(master, width=self.w, height=self.h)
 
         self.canvas_arr = np.zeros((self.h, self.w, 3), dtype=np.uint8)
 
-        self.obj = Object(np.array([
+        self.obj = Object(self.canvas, np.array([
             [20, 20, 1],
             [80, 20, 1],
             [80, 80, 1],
@@ -30,7 +33,6 @@ class Program(Observer):
 
         self.img = ImageTk.PhotoImage(Image.fromarray(self.canvas_arr))
 
-        self.canvas = tk.Canvas(master, width=self.w, height=self.h)
         self.update()
         # self.canvas.create_image(0, 0, anchor='nw', image=self.img)
 
@@ -53,15 +55,20 @@ class Program(Observer):
         self.btn_rot = tk.Button(frame, text="Rotate", command=self.rotate) \
             .grid(row=1, column=2)
 
-        self.rot_label = tk.Label(frame, text="Rotation angle: ").grid(row=1, column=0)
-        self.rot_entry = tk.Entry(frame)
-        self.rot_entry.insert(0, ROT_ANGLE)
-        self.rot_entry.grid(row=1, column=1)
+        # self.rot_label = tk.Label(frame, text="Rotation angle: ").grid(row=1, column=0)
+        # self.rot_entry = tk.Entry(frame)
+        # self.rot_entry.insert(0, ROT_ANGLE)
+        # self.rot_entry.grid(row=1, column=1)
 
-        midx, midy = self.obj.center_point
-        print(midx, midy)
-        pivot = Pivot(self.canvas, midx, midy, self.obj.move, width=8)
-        self.register_observer(pivot)
+
+        # pivot = Pivot(self.canvas, 45, 45, self.obj.move, width=8)
+        for p in self.obj.pivots:
+            self.register_observer(p)
+
+        tk.Button(frame, text="Scale mode", command=lambda: self.obj.choose_pivot(self.canvas, SP)) \
+            .grid(row=0, column=1)
+        tk.Button(frame, text="Position mode", command=lambda: self.obj.choose_pivot(self.canvas, MP)) \
+            .grid(row=0, column=2)
 
     def rotate(self):
 
@@ -92,3 +99,9 @@ class Program(Observer):
 
         self.canvas.create_image(0, 0, anchor='nw', image=self.img)
 
+        if self.debug:
+            for p in self.obj.points:
+                self.canvas.create_text(p[1] + 10, p[0] + 10, text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red")
+
+        for p in self.obj.pivots:
+            p.draw()

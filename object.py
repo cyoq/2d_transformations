@@ -1,29 +1,49 @@
 from typing import Tuple, Optional
 
 import numpy as np
+
 from line import Line
+from pivot import *
 
 
 class Object:
 
-    def __init__(self, points):
+    def __init__(self, canvas, points):
         self.points = points
-        self.center_point = self.recalculate_center()
+        self.center_point = self.midpoint()
+        self.active_pivots = MP
+        self.pivots = None
+        self.choose_pivot(canvas, self.active_pivots)
+
+    def choose_pivot(self, canvas, pivot_type):
+        self.active_pivots = pivot_type
+        if self.active_pivots == MP:
+            self.pivots = [Pivot(canvas, self.center_point[0], self.center_point[1], self.move,width=8)]
+        elif self.active_pivots == SP:
+            self.pivots = [
+                Pivot(canvas, self.points[0, 0], self.points[0, 1], lambda x, y: None, width=8),
+                Pivot(canvas, self.points[1, 0], self.points[1, 1], lambda x, y: None, width=8),
+                Pivot(canvas, self.points[2, 0], self.points[2, 1], lambda x, y: None, width=8),
+                Pivot(canvas, self.points[3, 0], self.points[3, 1], lambda x, y: None, width=8),
+            ]
+        elif self.active_pivots == RP:
+            self.pivots = []
+        else:
+            raise Exception("No such pivot type!")
+
+    def midpoint(self):
+        return ((self.points[0, 0] + self.points[2, 0]) // 2,
+                (self.points[0, 1] + self.points[2, 1]) // 2)
 
     def recalculate_center(self):
-        return (self.points[0, 0] + self.points[2, 0]) // 2, \
-                     (self.points[0, 1] + self.points[2, 1]) // 2
-
-    def intervals(self):
-        xmin = int(np.min(self.points[:, 0]))
-        xmax = int(np.max(self.points[:, 0]))
-
-        ymin = int(np.min(self.points[:, 1]))
-        ymax = int(np.max(self.points[:, 1]))
-
-        return xmin, xmax, ymin, ymax
+        midx, midy = self.midpoint()
+        for p in self.pivots:
+            p.update_pos(midy, midx)
+        return midx, midy
 
     def draw(self, canvas):
+        # for sp in self.pivots:
+        #     sp.draw()
         for pp, p in zip(self.points, self.points[1:]):
             Line.draw(canvas, pp[0], pp[1], p[0], p[1])
 
@@ -35,6 +55,13 @@ class Object:
         ])
 
         self.points = self.points @ matrix
+        max = np.max(self.points)
+        min = np.min(self.points)
+
+        if min <= 0 or max >= 600:
+            self.points = self.points @ np.linalg.inv(matrix)
+            self.points = self.points.astype(int)
+
         self.center_point = self.recalculate_center()
 
     def scale(self, x, y):
@@ -66,4 +93,4 @@ class Object:
         else:
             self.points = point_matrix + ((self.points - point_matrix) @ matrix)
         # self.points = self.points.astype(np.int32)
-        self.points = np.rint(self.points).astype(int) # works well with a point in the center
+        self.points = np.rint(self.points).astype(int)  # works well with a point in the center

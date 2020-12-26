@@ -6,7 +6,7 @@ from program import Program
 def main():
     root = tk.Tk()
 
-    my_gui = Program(root, (600, 600))
+    my_gui = Program(root, (600, 600), debug=True)
     root.update()
     root.mainloop()
 

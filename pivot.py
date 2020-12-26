@@ -1,5 +1,9 @@
 from observer import Observable
 
+MP = "M"  # Move pivot
+SP = "S"  # Scale pivot
+RP = "R"  # Rotation pivot
+
 
 class Pivot(Observable):
 
@@ -7,17 +11,24 @@ class Pivot(Observable):
         super().__init__()
         self.width = width
         self.color = color
+        self.canvas = canvas
         self.f = f
+
         x = x - width // 2
         y = y - width // 2
         self.points = [x, y, x + width, y + width]
-        self.rec = canvas.create_rectangle(self.points[0], self.points[1], self.points[2],
-                                           self.points[3], fill=color)
-        self.canvas = canvas
+        self.rec = None
+
         self.is_allowed_to_move = False
         self.canvas.bind('<B1-Motion>', self.move_rect)
         self.canvas.bind("<Motion>", self.check_hand)
         self.canvas.bind("<1>", self.mouse_down)
+
+    def update_pos(self, x, y):
+        x = x - self.width // 2
+        y = y - self.width // 2
+        self.points = [x, y, x + self.width, y + self.width]
+        # self.draw()
 
     def check_hand(self, e):
         bbox = self.canvas.bbox(self.rec)
@@ -38,8 +49,10 @@ class Pivot(Observable):
 
             self.f(dy, dx)
             self.notify_observers()
-            self.rec = self.canvas.create_rectangle(points[0], points[1], points[2],
-                                                    points[3], fill=self.color)
+
+    def draw(self):
+        self.rec = self.canvas.create_rectangle(self.points[0], self.points[1], self.points[2],
+                                                self.points[3], fill=self.color)
 
     def mouse_down(self, e):
         bbox = self.canvas.bbox(self.rec)
