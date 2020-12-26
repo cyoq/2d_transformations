@@ -82,7 +82,7 @@ class Program(Observer):
         self.scale_entry = tk.Entry()
         self.scale_entry.insert(1, 1)
         self.scale_entry.grid(row=1, column=2, sticky=tk.N)
-        tk.Button(frame, text="Scale it!", command=lambda: self.change_pivot_type(RP)) \
+        tk.Button(frame, text="Scale it!", command=self.scale) \
             .grid(row=1, column=3, sticky=tk.N)
 
     def change_pivot_type(self, type):
@@ -94,6 +94,11 @@ class Program(Observer):
         angle = int(self.rot_entry.get())
         if 0 <= angle <= 360:
             self.obj.rotate(angle, point=self.obj.center_point)
+        self.update()
+
+    def scale(self):
+        scale_factor = float(self.scale_entry.get())
+        self.obj.scale(scale_factor, scale_factor)
         self.update()
 
     def increase(self):

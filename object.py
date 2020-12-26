@@ -93,6 +93,12 @@ class Object:
         self.recalculate_pivots()
 
     def scale(self, x, y):
+        # Scaling is done from (0, 0), so that figure won't move
+        dx = np.min(self.points[:, 0])
+        dy = np.min(self.points[:, 1])
+        self.points[:, 0] -= dx
+        self.points[:, 1] -= dy
+
         matrix = np.array([
             [x, 0, 0],
             [0, y, 0],
@@ -100,6 +106,16 @@ class Object:
         ])
 
         self.points = self.points @ matrix
+        self.points[:, 0] += dx
+        self.points[:, 1] += dy
+
+        max = np.max(self.points)
+        min = np.min(self.points)
+
+        if min <= 0 or max >= 600:
+            self.points = self.points @ np.linalg.inv(matrix)
+
+        self.points = self.points.astype(int)
         self.center_point = self.midpoint()
         self.recalculate_pivots()
 
