@@ -1,15 +1,18 @@
-from observer import Observable
 from collections import deque
+
+from observer import Observable
 
 MP = "M"  # Move pivot
 SP = "S"  # Scale pivot
 RP = "R"  # Rotation pivot
+
 
 def iterator():
     i = 0
     while True:
         i += 1
         yield i
+
 
 gen = iterator()
 
@@ -40,11 +43,16 @@ class Pivot(Observable):
         self.canvas.tag_bind(self.tag, '<B1-Motion>', self.move_rect)
         self.canvas.tag_bind(self.tag, "<Motion>", self.check_hand)
         self.canvas.tag_bind(self.tag, "<1>", self.mouse_down)
+        # TODO: Bug with cursor
+        self.canvas.tag_bind(self.tag, "<ButtonRelease-1>", self.clear_last_movable)
 
         # self.canvas.bind('<B1-Motion>', self.move_rect)
         # self.canvas.bind("<Motion>", self.check_hand)
         # self.canvas.bind("<1>", self.mouse_down)
 
+    def clear_last_movable(self, e):
+        self.canvas.config(cursor="")
+        self.last_movable = None
 
     def update_pos(self, x, y):
         x = x - self.width // 2
@@ -62,7 +70,6 @@ class Pivot(Observable):
 
     def move_rect(self, event):
         if self.is_allowed_to_move:
-
             points = self.points
             dx, dy = event.x - points[0], event.y - points[1]
             points[0] = event.x
@@ -89,8 +96,10 @@ class Pivot(Observable):
             else:
                 self.canvas.delete(item)
 
-        self.history.append(self.rec)
+        # print("last:", self.last_movable)
+        # print(self.history)
 
+        self.history.append(self.rec)
 
     def mouse_down(self, e):
         bbox = self.canvas.bbox(self.rec)

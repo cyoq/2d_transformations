@@ -8,38 +8,65 @@ from pivot import *
 
 class Object:
 
-    def __init__(self, canvas, points):
+    def __init__(self, program, canvas, points):
         self.points = points
         self.center_point = self.midpoint()
         self.active_pivots = MP
+        self.program = program
         self.pivots = None
         self.choose_pivot(canvas, self.active_pivots)
 
     def choose_pivot(self, canvas, pivot_type):
+        canvas.delete("all")
         self.active_pivots = pivot_type
         if self.active_pivots == MP:
             self.pivots = [Pivot(canvas, self.center_point[0], self.center_point[1], self.move,width=8)]
         elif self.active_pivots == SP:
             self.pivots = [
-                Pivot(canvas, self.points[0, 0], self.points[0, 1], lambda x, y: None, width=8),
-                Pivot(canvas, self.points[1, 0], self.points[1, 1], lambda x, y: None, width=8),
-                Pivot(canvas, self.points[2, 0], self.points[2, 1], lambda x, y: None, width=8),
-                Pivot(canvas, self.points[3, 0], self.points[3, 1], lambda x, y: None, width=8),
+                # 2nd and 4th pivot has different arguments for manual_scale function
+                # because x and y's are swapped around
+                Pivot(canvas, self.points[0, 0], self.points[0, 1], lambda x, y: self.manual_point_move(x, y, 0), width=8),
+                Pivot(canvas, self.points[1, 0], self.points[1, 1], lambda x, y: self.manual_point_move(x, y, 3), width=8),
+                Pivot(canvas, self.points[2, 0], self.points[2, 1], lambda x, y: self.manual_point_move(x, y, 2), width=8),
+                Pivot(canvas, self.points[3, 0], self.points[3, 1], lambda x, y: self.manual_point_move(x, y, 1), width=8),
             ]
         elif self.active_pivots == RP:
             self.pivots = []
         else:
             raise Exception("No such pivot type!")
 
+        for p in self.pivots:
+            p.register_observer(self.program)
+
+        self.recalculate_pivots()
+
+    def manual_point_move(self, dx, dy, i):
+        if i == 0:
+            self.points[i, 0] += dx
+            self.points[i, 1] += dy
+            self.points[4, 0] += dx
+            self.points[4, 1] += dy
+        else:
+            self.points[i, 0] += dx
+            self.points[i, 1] += dy
+
     def midpoint(self):
         return ((self.points[0, 0] + self.points[2, 0]) // 2,
                 (self.points[0, 1] + self.points[2, 1]) // 2)
 
-    def recalculate_center(self):
-        midx, midy = self.midpoint()
-        for p in self.pivots:
-            p.update_pos(midy, midx)
-        return midx, midy
+    def recalculate_pivots(self):
+        if self.active_pivots == MP:
+            midx, midy = self.midpoint()
+            self.pivots[0].update_pos(midy, midx)
+        elif self.active_pivots == SP:
+            self.pivots[0].update_pos(self.points[0, 1], self.points[0, 0])
+            self.pivots[1].update_pos(self.points[3, 1], self.points[3, 0])
+            self.pivots[2].update_pos(self.points[2, 1], self.points[2, 0])
+            self.pivots[3].update_pos(self.points[1, 1], self.points[1, 0])
+        elif self.active_pivots == RP:
+            pass
+        else:
+            raise Exception("No such pivot type!")
 
     def draw(self, canvas):
         # for sp in self.pivots:
@@ -62,7 +89,8 @@ class Object:
             self.points = self.points @ np.linalg.inv(matrix)
             self.points = self.points.astype(int)
 
-        self.center_point = self.recalculate_center()
+        self.center_point = self.midpoint()
+        self.recalculate_pivots()
 
     def scale(self, x, y):
         matrix = np.array([
@@ -72,7 +100,8 @@ class Object:
         ])
 
         self.points = self.points @ matrix
-        self.center_point = self.recalculate_center()
+        self.center_point = self.midpoint()
+        self.recalculate_pivots()
 
     def rotate(self, angle: int, point: Optional[Tuple[int]] = None):
         if point is not None:
