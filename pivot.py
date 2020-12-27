@@ -1,20 +1,11 @@
 from collections import deque
 import numpy as np
 from observer import Observable
+from generator import gen
 
 MP = "M"  # Move pivot
 SP = "S"  # Scale pivot
 RP = "R"  # Rotation pivot
-
-
-def iterator():
-    i = 0
-    while True:
-        i += 1
-        yield i
-
-
-gen = iterator()
 
 
 class Pivot(Observable):
@@ -27,6 +18,8 @@ class Pivot(Observable):
         self.canvas = canvas
         self.f = f
         self.angle_based = angle_based
+        if angle_based:
+            self.angle = 0
         if angle_based is True and center is None and radius is None:
             raise Exception("no center pivot and/or radius for angle based movement!")
         self.center_pivot = center
@@ -96,25 +89,29 @@ class Pivot(Observable):
                 points = self.points
                 cmidx, cmidy = self.center_pivot.midpoint()
                 midx, midy = self.midpoint()
+                print(midx, midy, cmidx, cmidy)
                 angle = np.arctan2(event.y - cmidy, event.x - cmidx)
+
                 closest = (cmidx + self.radius * np.cos(angle), cmidy + self.radius * np.sin(angle))
                 points[0] = closest[0]
                 points[1] = closest[1]
                 points[2] = closest[0] + self.width
                 points[3] = closest[1] + self.width
-                angle = angle if angle >= 0 else (2 * np.pi + angle)
+                # angle = angle if angle >= 0 else (2 * np.pi + angle)
+                angle += np.pi
                 print("angle: ", np.rad2deg(angle))
-                self.f(angle)
+                # dtheta = angle - self.angle
+                # print("dtheta angle: ", np.rad2deg(dtheta))
+                print("self angle: ", np.rad2deg(self.angle))
+                self.f(-angle)
+                self.angle = angle
                 self.notify_observers()
 
-    def draw(self):
+    def draw(self, color):
 
         # self.canvas.delete(self.rec)
-
         self.rec = self.canvas.create_rectangle(self.points[0], self.points[1], self.points[2],
-                                                self.points[3], fill=self.color, tag=self.tag)
-
-        print("tag:", self.tag)
+                                                self.points[3], fill=self._from_rgb(color), tag=self.tag)
 
         while len(self.history) != 1 and len(self.history) != 0:
             item = self.history.popleft()
@@ -135,3 +132,11 @@ class Pivot(Observable):
             self.is_allowed_to_move = True
         else:
             self.is_allowed_to_move = False
+
+    def _from_rgb(self, rgb):
+        """
+        https://stackoverflow.com/questions/51591456/can-i-use-rgb-in-tkinter/51592104
+        translates an rgb tuple of int to a tkinter friendly color code
+        """
+        r, g, b = rgb
+        return f'#{r:02x}{g:02x}{b:02x}'

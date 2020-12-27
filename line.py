@@ -2,7 +2,7 @@
 class Line:
 
     @staticmethod
-    def draw(canvas, x_start, y_start, x_end, y_end):
+    def draw(canvas, x_start, y_start, x_end, y_end, color=(255, 0, 0)):
         dx = abs(x_end - x_start)
         dy = abs(y_end - y_start)
 
@@ -23,7 +23,7 @@ class Line:
                     x += xs
                     pn = pn + 2 * dy
                 # place for drawing
-                canvas[x, y, :] = (255, 0, 0)
+                canvas[x, y, :] = color
         else:
             pn = 2 * dx - dy
             while y != y_end:
@@ -35,4 +35,4 @@ class Line:
                     y += ys
                     pn = pn + 2 * dx
                 # place for drawing
-                canvas[x, y, :] = (255, 0, 0)
+                canvas[x, y, :] = color
