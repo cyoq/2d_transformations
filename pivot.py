@@ -63,7 +63,6 @@ class Pivot(Observable):
         x = x - self.width // 2
         y = y - self.width // 2
         self.points = [x, y, x + self.width, y + self.width]
-        # self.draw()
 
     def check_hand(self, e):
         bbox = self.canvas.bbox(self.rec)
@@ -109,7 +108,6 @@ class Pivot(Observable):
 
     def draw(self, color):
 
-        # self.canvas.delete(self.rec)
         self.rec = self.canvas.create_rectangle(self.points[0], self.points[1], self.points[2],
                                                 self.points[3], fill=self._from_rgb(color), tag=self.tag)
 
@@ -119,9 +117,6 @@ class Pivot(Observable):
                 self.history.append(item)
             else:
                 self.canvas.delete(item)
-
-        # print("last:", self.last_movable)
-        # print(self.history)
 
         self.history.append(self.rec)
 

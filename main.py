@@ -22,9 +22,9 @@ if __name__ == '__main__':
 # canvas = Canvas(root, width=400, height=200)
 # canvas.pack()
 # canvas.create_oval(10, 10, 110, 60, fill="grey")
-# canvas.create_text(60, 35, text="Oval")
+# canvas.create_text(60, 35, text_coords="Oval")
 # canvas.create_rectangle(10, 100, 110, 150, outline="blue")
-# canvas.create_text(60, 125, text="Rectangle")
+# canvas.create_text(60, 125, text_coords="Rectangle")
 # canvas.create_line(60, 60, 60, 100, width=3)
 #
 #

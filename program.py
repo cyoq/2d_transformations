@@ -1,5 +1,5 @@
 import tkinter as tk
-from typing import Tuple
+from typing import Tuple, Type, Optional
 
 from PIL import Image, ImageTk
 
@@ -7,6 +7,7 @@ from consts import ROT_ANGLE
 from object import Object
 from observer import Observer
 from pivot import *
+from rectangle import Rectangle
 
 font_styles = {
     "simple": ("Courier", 11),
@@ -26,11 +27,18 @@ class Program(Observer):
         self.master = master
         self.master.title("2D Transformations")
         self.debug = debug
-        if self.debug:
-            self.text = []
+
+        self.text_coords = []
+        self.show_coords = False
+
+        self.is_object_creation: Tuple[bool, Optional[Type[Object]]] = (False, None)  # second argument is an object type
+        self.start_x = 0
+        self.start_y = 0
+        self.last_created = None
 
         self.image = None
-        self.vars = []
+        self.current_object: Type[Object] = None
+
         self.color_entries = {
             CANVAS: [],
             PIVOT: [],
@@ -41,7 +49,6 @@ class Program(Observer):
             PIVOT: (0, 0, 255),
             LINE: (255, 0, 0)
         }
-        self.canvas_color = (0, 0, 0)
 
         self.h, self.w = 600, 600
 
@@ -49,13 +56,19 @@ class Program(Observer):
 
         self.canvas_arr = np.zeros((self.h, self.w, 3), dtype=np.uint8)
 
-        self.obj = Object(self, self.canvas, np.array([
+        self.objs = []
+
+        self.obj = Rectangle(self, self.canvas, np.array([
             [20, 20, 1],
             [80, 20, 1],
             [80, 80, 1],
             [20, 80, 1],
             [20, 20, 1],
         ]))
+
+        self.current_object = self.obj
+
+        self.objs.append(self.obj)
 
         self.img = ImageTk.PhotoImage(Image.fromarray(self.canvas_arr))
 
@@ -92,8 +105,7 @@ class Program(Observer):
         self.object_angle_label.grid(row=3, column=1, sticky=tk.W)
 
         self.needs_text_coords = tk.IntVar()
-        self.needs_text_coords.set(1)
-        self.vars.append(self.needs_text_coords)
+        self.needs_text_coords.set(0)
         self.checkbox = tk.Checkbutton(info_frame, text="Show coordinates?", font=font_styles["simple"],
                                        variable=self.needs_text_coords, command=self.check_show_coords)
         self.checkbox.grid(row=4, column=0, sticky=tk.NW)
@@ -249,6 +261,14 @@ class Program(Observer):
             .grid(row=6, column=6, sticky=tk.NW, padx=2)
 
         customization_frame.grid(row=2, column=1, columnspan=3, rowspan=6, sticky=tk.W)
+
+        tk.Button(self.master, text="Create rectangle", command=lambda: self.create_object(Rectangle),
+                  font=font_styles["simple"]) \
+            .grid(row=5, column=1)
+
+        self.canvas.bind("<ButtonPress-1>", self._on_mouse_down)
+        self.canvas.bind("<B1-Motion>", self._on_mouse_motion)
+        self.canvas.bind("<ButtonRelease-1>", self._on_mouse_release)
         self.update()
 
     @staticmethod
@@ -259,8 +279,38 @@ class Program(Observer):
             return True
         return False
 
+    def _on_mouse_down(self, e):
+        if self.is_object_creation[0]:
+            self.start_x = e.x
+            self.start_y = e.y
+
+        for o in self.objs:
+            if o.is_inside(e.y, e.x):
+                self.current_object = o
+
+    def _on_mouse_motion(self, e):
+        if self.is_object_creation[0]:
+            cls = self.is_object_creation[1]
+            self.last_created = cls.create_object((self.start_y, self.start_x), (e.y, e.x), self, self.canvas)
+            self.update()
+
+    def _on_mouse_release(self, e):
+        if self.is_object_creation[0]:
+            self.current_object.choose_pivot(self.canvas, MP)
+            self.update()
+            self.current_object = self.last_created
+            self.objs.append(self.last_created)
+            self.last_created = None
+            self.is_object_creation = (False, None)
+            self.current_object.choose_pivot(self.canvas, MP)
+            self.update()
+
+    def create_object(self, cls: Type[Object]):
+        self.is_object_creation = (True, cls)
+
     def check_show_coords(self):
-        print(self.needs_text_coords.get())
+        self.show_coords = self.needs_text_coords.get()
+        self.update()
 
     def change_color(self, key):
         r = int(self.color_entries[key][0].get())
@@ -275,19 +325,19 @@ class Program(Observer):
             self.update()
 
     def change_pivot_type(self, type):
-        self.obj.choose_pivot(self.canvas, type)
+        self.current_object.choose_pivot(self.canvas, type)
         self.update()
 
     def rotate(self):
         # messagebox.showerror("Error", "Incorrect button")
         angle = int(self.rot_entry.get())
         if 0 <= angle <= 360:
-            self.obj.rotate(angle, point=self.obj.center_point)
+            self.current_object.rotate(angle, point=self.obj.center_point)
         self.update()
 
     def scale(self):
         scale_factor = float(self.scale_entry.get())
-        self.obj.scale(scale_factor, scale_factor)
+        self.current_object.scale(scale_factor, scale_factor)
         self.update()
 
     def move(self):
@@ -304,40 +354,44 @@ class Program(Observer):
             self.move_entry_y.insert(0, "over9000")
             over = True
         if not over:
-            self.obj.move(y, x)
+            self.current_object.move(y, x)
             self.update()
 
     def notify(self):
         self.update()
 
     def update(self):
-        midx, midy = self.obj.midpoint()
+        midx, midy = self.current_object.center_point
         self.mid_label_var.set("({}, {})".format(midy, midx))
 
-        self.angle_label_var.set("{} degrees".format(int(self.obj.angle)))
+        self.angle_label_var.set("{} degrees".format(int(self.current_object.angle)))
 
         # It is needed to clear canvas items, so that no memory leak would appear
-        # self.canvas.delete("all")
         self.canvas.delete(self.image)
 
         self.canvas_arr = np.zeros((self.h, self.w, 3), dtype=np.uint8)
         self.canvas_arr[:] = self.colors[CANVAS]
 
-        self.obj.draw(self.canvas_arr, self.colors[LINE])
+        for o in self.objs:
+            o.draw(self.canvas_arr, self.colors[LINE])
+
+        if self.last_created is not None:
+            self.last_created.draw(self.canvas_arr, self.colors[LINE])
 
         self.img = ImageTk.PhotoImage(Image.fromarray(self.canvas_arr.astype(np.uint8)))
 
         self.image = self.canvas.create_image(0, 0, anchor='nw', image=self.img)
 
-        for p in self.obj.pivots:
-            p.draw(self.colors[PIVOT])
+        for o in self.objs:
+            for p in o.pivots:
+                p.draw(self.colors[PIVOT])
 
-        if self.debug:
-            for t in self.text:
+        if self.show_coords:
+            for t in self.text_coords:
                 self.canvas.delete(t)
 
-            for p in self.obj.points:
-                self.text.append(
+            for p in self.current_object.points:
+                self.text_coords.append(
                     self.canvas.create_text(p[1] + 10, p[0] + 10,
                                             text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red"))
 
