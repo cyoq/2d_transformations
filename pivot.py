@@ -88,16 +88,14 @@ class Pivot(Observable):
             else:
                 # points = self.points
                 cmidx, cmidy = self.center_pivot.midpoint()
-                angle = np.arctan2(event.y - cmidy, event.x - cmidx)  # -pi - pi
-                print("angle: ", np.rad2deg(angle))
+                angle = np.arctan2(event.y - cmidy, event.x - cmidx)
 
                 closest = (cmidx + self.radius * np.cos(angle), cmidy + self.radius * np.sin(angle))
                 self.points[0] = closest[0]
                 self.points[1] = closest[1]
                 self.points[2] = closest[0] + self.width
                 self.points[3] = closest[1] + self.width
-                # angle = angle if angle >= 0 else (2 * np.pi + angle)
-                # angle += np.pi  # from 0 to 360 degrees
+
                 self.f(angle)
                 self.angle = angle
                 self.notify_observers()

@@ -81,7 +81,7 @@ class Program(Observer):
 
         # self.canvas.create_image(0, 0, anchor='nw', image=self.img)
 
-        self.canvas.grid(row=0, column=0, rowspan=5)
+        self.canvas.grid(row=0, column=0, rowspan=4)
 
         # Information frame
         info_frame = tk.Frame(master)
@@ -92,7 +92,8 @@ class Program(Observer):
             .grid(row=1, column=0, sticky=tk.NW)
         self.object_name_label_var = tk.StringVar()
         self.object_name_label_var.set(self.obj.name)
-        self.object_name_label = tk.Label(info_frame, textvariable=self.object_name_label_var, font=font_styles["simple"])
+        self.object_name_label = tk.Label(info_frame, textvariable=self.object_name_label_var,
+                                          font=font_styles["simple"])
         self.object_name_label.grid(row=1, column=1, sticky=tk.W)
 
         tk.Label(info_frame, text="Midpoint coordinates: ", font=font_styles["bold"]) \
@@ -112,7 +113,7 @@ class Program(Observer):
         self.object_angle_label.grid(row=3, column=1, sticky=tk.W)
 
         tk.Button(info_frame, text="Delete current object", command=self.delete_current_object,
-                  font=font_styles["simple"])\
+                  font=font_styles["simple"]) \
             .grid(row=4, column=0, pady=2, sticky=tk.NW)
 
         self.needs_text_coords = tk.IntVar()
@@ -164,7 +165,7 @@ class Program(Observer):
             .grid(row=4, column=5, sticky=tk.N, padx=2, pady=2)
 
         # Scaling
-        tk.Label(operation_frame, text="Scale factor: ", font=font_styles["bold"])\
+        tk.Label(operation_frame, text="Scale factor: ", font=font_styles["bold"]) \
             .grid(row=5, column=0, sticky=tk.NW)
         self.scale_entry = tk.Entry(operation_frame)
         self.scale_entry.insert(0, 1)
@@ -271,17 +272,31 @@ class Program(Observer):
                   font=font_styles["simple"]) \
             .grid(row=6, column=6, sticky=tk.NW, padx=2)
 
-        customization_frame.grid(row=2, column=1, columnspan=3, rowspan=6, sticky=tk.W)
+        customization_frame.grid(row=2, column=1, columnspan=7, rowspan=7, sticky=tk.NW)
 
         # Object frame
         object_frame = tk.Frame(master)
 
-        tk.Label(info_frame, text="Object creation", font=font_styles["heading"], foreground="red") \
+        tk.Label(object_frame, text="Object creation: ", font=font_styles["heading"], foreground="red") \
             .grid(row=0, column=0, sticky=tk.W, pady=1, columnspan=3)
 
-        tk.Button(object_frame, text="Create rectangle", command=lambda: self.create_object(Rectangle),
+        tk.Button(object_frame,
+                  text="Create a rectangle",
+                  command=lambda: self.create_object(Rectangle),
                   font=font_styles["simple"]) \
-            .grid(row=1, column=0, sticky=tk.W)
+            .grid(row=1, column=0, sticky=tk.NW, padx=3, pady=2)
+
+        tk.Button(object_frame,
+                  text="Create a rectangle",
+                  command=lambda: self.create_object(Rectangle),
+                  font=font_styles["simple"]) \
+            .grid(row=1, column=1, sticky=tk.NW, padx=3, pady=2)
+
+        tk.Button(object_frame,
+                  text="Create a rectangle",
+                  command=lambda: self.create_object(Rectangle),
+                  font=font_styles["simple"]) \
+            .grid(row=1, column=2, sticky=tk.NW, padx=3, pady=2)
 
         object_frame.grid(row=3, column=1, columnspan=6, rowspan=6, sticky=tk.NW)
 
@@ -428,7 +443,7 @@ class Program(Observer):
 
             for p in self.current_object.points:
                 self.text_coords.append(
-                    self.canvas.create_text(p[1] + 10, p[0] + 10,
+                    self.canvas.create_text(p[1] + 10, p[0] - 10,
                                             text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red"))
 
-        print(self.canvas.find_all(), "length: ", len(self.canvas.find_all()))
+        # print(self.canvas.find_all(), "length: ", len(self.canvas.find_all()))
