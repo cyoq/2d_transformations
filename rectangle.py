@@ -1,14 +1,19 @@
+import itertools
 from typing import Tuple
 
+from generator import gen
 from line import Line
-from object import Object
+from object import Object, DEFAULT_COLOR
 from pivot import *
 
 
 class Rectangle(Object):
 
-    def __init__(self, program, canvas, points):
-        super().__init__(program, canvas, points, "Rectangle")
+    _counter = itertools.count()
+
+    def __init__(self, program, canvas, points, color=DEFAULT_COLOR):
+        super().__init__(program, canvas, points, color=color)
+        self.name = '%s_%d' % ("Rectangle", next(self._counter))
 
     def choose_pivot(self, canvas, pivot_type):
         canvas.delete("all")
@@ -92,9 +97,11 @@ class Rectangle(Object):
         ])
         return cls(program, canvas, points)
 
-    def draw(self, canvas_arr, color):
+    def draw(self, canvas_arr, color=DEFAULT_COLOR):
+        if color != DEFAULT_COLOR:
+            self.color = color
         for pp, p in zip(self.points, self.points[1:]):
-            Line.draw(canvas_arr, pp[0], pp[1], p[0], p[1], color)
+            Line.draw(canvas_arr, pp[0], pp[1], p[0], p[1], self.color)
 
     def is_inside(self, x, y):
         if self.points[0, 0] <= x <= self.points[2, 0] and self.points[0, 1] <= y <= self.points[2, 1]:

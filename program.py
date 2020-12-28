@@ -4,6 +4,7 @@ from typing import Tuple, Type, Optional
 from PIL import Image, ImageTk
 
 from consts import ROT_ANGLE
+from generator import Generator
 from object import Object
 from observer import Observer
 from pivot import *
@@ -19,6 +20,10 @@ font_styles = {
 CANVAS = "canvas"
 PIVOT = "pivot"
 LINE = "line"
+
+name_generator = {
+    "Rectangle": Generator().generator()
+}
 
 
 class Program(Observer):
@@ -85,7 +90,9 @@ class Program(Observer):
 
         tk.Label(info_frame, text="Current object: ", font=font_styles["bold"]) \
             .grid(row=1, column=0, sticky=tk.NW)
-        self.object_name_label = tk.Label(info_frame, text="{}".format(self.obj.name), font=font_styles["simple"])
+        self.object_name_label_var = tk.StringVar()
+        self.object_name_label_var.set(self.obj.name)
+        self.object_name_label = tk.Label(info_frame, textvariable=self.object_name_label_var, font=font_styles["simple"])
         self.object_name_label.grid(row=1, column=1, sticky=tk.W)
 
         tk.Label(info_frame, text="Midpoint coordinates: ", font=font_styles["bold"]) \
@@ -321,7 +328,10 @@ class Program(Observer):
         is_b = self.over9000(b, 0, 255, self.color_entries[key][2])
         over = is_r or is_g or is_b
         if not over:
-            self.colors[key] = (r, g, b)
+            if key == LINE:
+                self.current_object.color = (r, g, b)
+            else:
+                self.colors[key] = (r, g, b)
             self.update()
 
     def change_pivot_type(self, type):
@@ -361,6 +371,8 @@ class Program(Observer):
         self.update()
 
     def update(self):
+        self.object_name_label_var.set(self.current_object.name)
+
         midx, midy = self.current_object.center_point
         self.mid_label_var.set("({}, {})".format(midy, midx))
 
@@ -373,7 +385,7 @@ class Program(Observer):
         self.canvas_arr[:] = self.colors[CANVAS]
 
         for o in self.objs:
-            o.draw(self.canvas_arr, self.colors[LINE])
+            o.draw(self.canvas_arr)
 
         if self.last_created is not None:
             self.last_created.draw(self.canvas_arr, self.colors[LINE])

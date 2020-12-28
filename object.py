@@ -1,22 +1,25 @@
+import itertools
 from typing import Tuple
 
 from pivot import *
 from generator import Generator
 
+DEFAULT_COLOR = (255, 0, 0)
+
 
 class Object:
 
-    # TODO: name fix
-    _name_counter = Generator().generator()  # counter for giving names
+    _counter = itertools.count()
 
-    def __init__(self, program, canvas, points, name: str = "Object"):
+    def __init__(self, program, canvas, points, name_suffix: int = 1, color=DEFAULT_COLOR):
         self.points = points
         self.center_point = self.midpoint()
         self.active_pivots = MP
         self.angle = 0
         self.program = program
-        self._class_name = name
-        self.name = "{}{}".format(self._class_name, next(self._name_counter))
+        self.color = color
+        # self.name = "{}{}".format(self._class_name, next(self._name_counter))
+        self.name = '%s_%d' % ("Object", next(self._counter))
         self.pivots = None
         self.choose_pivot(canvas, self.active_pivots)
 
@@ -42,7 +45,7 @@ class Object:
     def create_object(cls, start_point, end_point, program, canvas):
         pass
 
-    def draw(self, canvas_arr, color):
+    def draw(self, canvas_arr, color=DEFAULT_COLOR):
         pass
 
     def move(self, xs, ys):
