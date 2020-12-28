@@ -10,7 +10,7 @@ RP = "R"  # Rotation pivot
 
 class Pivot(Observable):
 
-    def __init__(self, canvas, x, y, f, width: int =10, color: str = "blue", stationary=False,
+    def __init__(self, canvas, x, y, f, width: int = 10, color: str = "blue", stationary=False,
                  angle_based=False, center: "Pivot" = None, radius: int = None):
         super().__init__()
         self.width = width
@@ -51,8 +51,9 @@ class Pivot(Observable):
         # self.canvas.bind("<1>", self.mouse_down)
 
     def clear_last_movable(self, e):
-        self.canvas.config(cursor="")
-        self.last_movable = None
+        pass
+        # self.canvas.config(cursor="")
+        # self.last_movable = None
 
     def midpoint(self):
         midx, midy = (self.points[0] + self.points[2]) // 2, \
@@ -85,24 +86,19 @@ class Pivot(Observable):
                 self.f(dy, dx)
                 self.notify_observers()
             else:
-                points = self.points
+                # points = self.points
                 cmidx, cmidy = self.center_pivot.midpoint()
-                midx, midy = self.midpoint()
-                print(midx, midy, cmidx, cmidy)
-                angle = np.arctan2(event.y - cmidy, event.x - cmidx)
+                angle = np.arctan2(event.y - cmidy, event.x - cmidx)  # -pi - pi
+                print("angle: ", np.rad2deg(angle))
 
                 closest = (cmidx + self.radius * np.cos(angle), cmidy + self.radius * np.sin(angle))
-                points[0] = closest[0]
-                points[1] = closest[1]
-                points[2] = closest[0] + self.width
-                points[3] = closest[1] + self.width
+                self.points[0] = closest[0]
+                self.points[1] = closest[1]
+                self.points[2] = closest[0] + self.width
+                self.points[3] = closest[1] + self.width
                 # angle = angle if angle >= 0 else (2 * np.pi + angle)
-                angle += np.pi
-                print("angle: ", np.rad2deg(angle))
-                # dtheta = angle - self.angle
-                # print("dtheta angle: ", np.rad2deg(dtheta))
-                print("self angle: ", np.rad2deg(self.angle))
-                self.f(-angle)
+                # angle += np.pi  # from 0 to 360 degrees
+                self.f(angle)
                 self.angle = angle
                 self.notify_observers()
 

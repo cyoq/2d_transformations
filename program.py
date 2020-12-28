@@ -35,14 +35,16 @@ class Program(Observer):
 
         self.text_coords = []
         self.show_coords = False
+        self.angle = 0
 
-        self.is_object_creation: Tuple[bool, Optional[Type[Object]]] = (False, None)  # second argument is an object type
+        # second argument is an object type
+        self.is_object_creation: Tuple[bool, Optional[Type[Object]]] = (False, None)
         self.start_x = 0
         self.start_y = 0
         self.last_created = None
 
         self.image = None
-        self.current_object: Type[Object] = None
+        self.current_object: Optional[Type[Object]] = None
 
         self.color_entries = {
             CANVAS: [],
@@ -55,13 +57,13 @@ class Program(Observer):
             LINE: (255, 0, 0)
         }
 
-        self.h, self.w = 600, 600
+        self.h, self.w = 800, 800
 
         self.canvas = tk.Canvas(master, width=self.w, height=self.h)
 
         self.canvas_arr = np.zeros((self.h, self.w, 3), dtype=np.uint8)
 
-        self.objs = []
+        self.objs = {}
 
         self.obj = Rectangle(self, self.canvas, np.array([
             [20, 20, 1],
@@ -73,17 +75,15 @@ class Program(Observer):
 
         self.current_object = self.obj
 
-        self.objs.append(self.obj)
+        self.objs[self.obj.id] = self.obj
 
         self.img = ImageTk.PhotoImage(Image.fromarray(self.canvas_arr))
 
         # self.canvas.create_image(0, 0, anchor='nw', image=self.img)
 
-        # self.master.grid_rowconfigure(0, weight=1)
-        # self.master.grid_rowconfigure(1, minsize=10, weight=1)
-        # self.master.grid_rowconfigure(2, weight=1)
         self.canvas.grid(row=0, column=0, rowspan=5)
 
+        # Information frame
         info_frame = tk.Frame(master)
         tk.Label(info_frame, text="Information about the object:", font=font_styles["heading"], foreground="red") \
             .grid(row=0, column=0, sticky=tk.NW, pady=1, columnspan=3)
@@ -111,13 +111,17 @@ class Program(Observer):
                                            font=font_styles["simple"])
         self.object_angle_label.grid(row=3, column=1, sticky=tk.W)
 
+        tk.Button(info_frame, text="Delete current object", command=self.delete_current_object,
+                  font=font_styles["simple"])\
+            .grid(row=4, column=0, pady=2, sticky=tk.NW)
+
         self.needs_text_coords = tk.IntVar()
         self.needs_text_coords.set(0)
         self.checkbox = tk.Checkbutton(info_frame, text="Show coordinates?", font=font_styles["simple"],
                                        variable=self.needs_text_coords, command=self.check_show_coords)
-        self.checkbox.grid(row=4, column=0, sticky=tk.NW)
+        self.checkbox.grid(row=5, column=0, sticky=tk.NW)
 
-        info_frame.grid(row=0, column=1, columnspan=3, rowspan=5, sticky=tk.NW)
+        info_frame.grid(row=0, column=1, columnspan=3, rowspan=6, sticky=tk.NW)
 
         # Operation Frame
         operation_frame = tk.Frame(master)
@@ -269,9 +273,17 @@ class Program(Observer):
 
         customization_frame.grid(row=2, column=1, columnspan=3, rowspan=6, sticky=tk.W)
 
-        tk.Button(self.master, text="Create rectangle", command=lambda: self.create_object(Rectangle),
+        # Object frame
+        object_frame = tk.Frame(master)
+
+        tk.Label(info_frame, text="Object creation", font=font_styles["heading"], foreground="red") \
+            .grid(row=0, column=0, sticky=tk.W, pady=1, columnspan=3)
+
+        tk.Button(object_frame, text="Create rectangle", command=lambda: self.create_object(Rectangle),
                   font=font_styles["simple"]) \
-            .grid(row=5, column=1)
+            .grid(row=1, column=0, sticky=tk.W)
+
+        object_frame.grid(row=3, column=1, columnspan=6, rowspan=6, sticky=tk.NW)
 
         self.canvas.bind("<ButtonPress-1>", self._on_mouse_down)
         self.canvas.bind("<B1-Motion>", self._on_mouse_motion)
@@ -286,12 +298,22 @@ class Program(Observer):
             return True
         return False
 
+    def delete_current_object(self):
+        del self.objs[self.current_object.id]
+        objs = list(self.objs.values())
+        if len(objs) > 0:
+            self.current_object = objs[0]
+        else:
+            self.current_object = None
+
+        self.update()
+
     def _on_mouse_down(self, e):
         if self.is_object_creation[0]:
             self.start_x = e.x
             self.start_y = e.y
 
-        for o in self.objs:
+        for o in self.objs.values():
             if o.is_inside(e.y, e.x):
                 self.current_object = o
 
@@ -303,10 +325,11 @@ class Program(Observer):
 
     def _on_mouse_release(self, e):
         if self.is_object_creation[0]:
-            self.current_object.choose_pivot(self.canvas, MP)
-            self.update()
+            if self.current_object is not None:
+                self.current_object.choose_pivot(self.canvas, MP)
+                self.update()
             self.current_object = self.last_created
-            self.objs.append(self.last_created)
+            self.objs[self.last_created.id] = self.last_created
             self.last_created = None
             self.is_object_creation = (False, None)
             self.current_object.choose_pivot(self.canvas, MP)
@@ -341,8 +364,9 @@ class Program(Observer):
     def rotate(self):
         # messagebox.showerror("Error", "Incorrect button")
         angle = int(self.rot_entry.get())
-        if 0 <= angle <= 360:
-            self.current_object.rotate(angle, point=self.obj.center_point)
+        self.angle += angle
+        self.angle %= 360
+        self.current_object.rotate(np.deg2rad(self.angle), point=self.current_object.center_point)
         self.update()
 
     def scale(self):
@@ -371,20 +395,20 @@ class Program(Observer):
         self.update()
 
     def update(self):
-        self.object_name_label_var.set(self.current_object.name)
+        if self.current_object is not None:
+            self.object_name_label_var.set(self.current_object.name)
 
-        midx, midy = self.current_object.center_point
-        self.mid_label_var.set("({}, {})".format(midy, midx))
+            midx, midy = self.current_object.center_point
+            self.mid_label_var.set("({}, {})".format(midy, midx))
 
-        self.angle_label_var.set("{} degrees".format(int(self.current_object.angle)))
-
+            self.angle_label_var.set("{} degrees".format(int(self.current_object.angle)))
         # It is needed to clear canvas items, so that no memory leak would appear
         self.canvas.delete(self.image)
 
         self.canvas_arr = np.zeros((self.h, self.w, 3), dtype=np.uint8)
         self.canvas_arr[:] = self.colors[CANVAS]
 
-        for o in self.objs:
+        for o in self.objs.values():
             o.draw(self.canvas_arr)
 
         if self.last_created is not None:
@@ -394,7 +418,7 @@ class Program(Observer):
 
         self.image = self.canvas.create_image(0, 0, anchor='nw', image=self.img)
 
-        for o in self.objs:
+        for o in self.objs.values():
             for p in o.pivots:
                 p.draw(self.colors[PIVOT])
 
@@ -407,4 +431,4 @@ class Program(Observer):
                     self.canvas.create_text(p[1] + 10, p[0] + 10,
                                             text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red"))
 
-        # print(self.canvas.find_all(), "length: ", len(self.canvas.find_all()))
+        print(self.canvas.find_all(), "length: ", len(self.canvas.find_all()))

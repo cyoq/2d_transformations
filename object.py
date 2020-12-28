@@ -2,7 +2,6 @@ import itertools
 from typing import Tuple
 
 from pivot import *
-from generator import Generator
 
 DEFAULT_COLOR = (255, 0, 0)
 
@@ -11,15 +10,18 @@ class Object:
 
     _counter = itertools.count()
 
-    def __init__(self, program, canvas, points, name_suffix: int = 1, color=DEFAULT_COLOR):
+    def __init__(self, program, canvas, points, color=DEFAULT_COLOR):
+        self.canvas_size = (int(canvas.cget("height")), int(canvas.cget("width")))
         self.points = points
         self.center_point = self.midpoint()
         self.active_pivots = MP
         self.angle = 0
         self.program = program
         self.color = color
-        # self.name = "{}{}".format(self._class_name, next(self._name_counter))
-        self.name = '%s_%d' % ("Object", next(self._counter))
+        self.start_points = points
+        i = next(self._counter)
+        self.name = '%s_%d' % ("Object", i)
+        self.id = i
         self.pivots = None
         self.choose_pivot(canvas, self.active_pivots)
 
@@ -48,6 +50,7 @@ class Object:
     def draw(self, canvas_arr, color=DEFAULT_COLOR):
         pass
 
+    # TODO: bug with move
     def move(self, xs, ys):
         matrix = np.array([
             [1, 0, 0],
@@ -59,10 +62,11 @@ class Object:
         max = np.max(self.points)
         min = np.min(self.points)
 
-        if min <= 0 or max >= 600:
+        if min <= 0 or max >= self.canvas_size[0]:
             self.points = self.points @ np.linalg.inv(matrix)
             self.points = self.points.astype(int)
 
+        self.start_points = self.points
         self.center_point = self.midpoint()
         self.recalculate_pivots()
 
@@ -86,24 +90,31 @@ class Object:
         max = np.max(self.points)
         min = np.min(self.points)
 
-        if min <= 0 or max >= 600:
+        if min <= 0 or max >= self.canvas_size[0]:
             self.points = self.points @ np.linalg.inv(matrix)
 
         self.points = self.points.astype(int)
+        self.start_points = self.points
         self.center_point = self.midpoint()
         self.recalculate_pivots()
 
-    def rotate(self, angle: int, point: Tuple[int, int] = None):
+    def rotate(self, angle: int, point: Tuple[int, int] = None) -> None:
+        """
+        :param angle: angle by which object should be rotated, counting from the starting position, when angle is 0.
+            Angle must be given in radians.
+        :param point: point by which will be done rotation
+        :return: None
+        """
 
         if point is not None:
             point_matrix = np.ones((self.points.shape[0], 3))
             point_matrix[:, 0] *= point[0]
             point_matrix[:, 1] *= point[1]
 
-        self.angle += angle
-        self.angle %= 360
+        self.angle = np.rint(np.rad2deg(angle))
 
-        a = np.deg2rad(angle)
+        # a = np.deg2rad(self.angle)
+        a = angle
 
         matrix = np.array([
             [np.cos(a), np.sin(a), 0],
@@ -112,11 +123,9 @@ class Object:
         ])
 
         if point is None:
-            self.points = self.points @ matrix
+            self.points = self.start_points @ matrix
         else:
-            self.points = point_matrix + ((self.points - point_matrix) @ matrix)
+            self.points = point_matrix + ((self.start_points - point_matrix) @ matrix)
 
         # self.points = self.points.astype(np.int32)
-        # self.center_point = self.midpoint()
         self.points = np.rint(self.points).astype(int)  # works well with a point in the center
-        # self.recalculate_pivots()
