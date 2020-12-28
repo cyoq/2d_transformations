@@ -382,6 +382,7 @@ class Program(Observer):
         self.angle += angle
         self.angle %= 360
         self.current_object.rotate(np.deg2rad(self.angle), point=self.current_object.center_point)
+        self.current_object.recalculate_pivots()
         self.update()
 
     def scale(self):
@@ -425,6 +426,13 @@ class Program(Observer):
 
         for o in self.objs.values():
             o.draw(self.canvas_arr)
+
+        # self.current_object.flood_fill(self.current_object.center_point[0],
+        #                                self.current_object.center_point[1],
+        #                                self.canvas_arr,
+        #                                (0, 0, 0),
+        #                                (0, 255, 0),
+        #                                (255, 0, 0))
 
         if self.last_created is not None:
             self.last_created.draw(self.canvas_arr, self.colors[LINE])

@@ -108,6 +108,40 @@ class Rectangle(Object):
             return True
         return False
 
+    def flood_fill(self, x, y, canvas_arr, target_color, replacement_color, outline_color):
+        """
+        Very slow. Use cautiously!
+        """
+        if np.all(canvas_arr[x, y, :] == outline_color) or np.all(canvas_arr[x, y, :] == replacement_color):
+            return
+
+        if np.all(canvas_arr[x, y, :] != target_color):
+            return
+
+        # canvas_arr[x, y, :] = replacement_color
+
+        queue = deque()
+        queue.append((x, y))
+
+        while queue:
+            item = queue.pop()
+
+            if np.all(canvas_arr[item[0], item[1]] == target_color):
+
+                canvas_arr[item[0], item[1]] = replacement_color
+
+                queue.append((item[0] - 1, item[1]))
+                queue.append((item[0] + 1, item[1]))
+
+                queue.append((item[0], item[1] + 1))
+                queue.append((item[0], item[1] - 1))
+
+                # queue.append((item[0] + 1, item[1] + 1))
+                # queue.append((item[0] - 1, item[1] + 1))
+                #
+                # queue.append((item[0] + 1, item[1] - 1))
+                # queue.append((item[0] - 1, item[1] - 1))
+
     def move(self, xs, ys):
         super().move(xs, ys)
 

@@ -50,6 +50,9 @@ class Object:
     def draw(self, canvas_arr, color=DEFAULT_COLOR):
         pass
 
+    # def fill(self, color=DEFAULT_COLOR):
+    #     pass
+
     # TODO: bug with move
     def move(self, xs, ys):
         matrix = np.array([
