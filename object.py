@@ -5,10 +5,10 @@ from pivot import *
 
 DEFAULT_COLOR = (255, 0, 0)
 
+counter = itertools.count()
+
 
 class Object:
-
-    _counter = itertools.count()
 
     def __init__(self, program, canvas, points, color=DEFAULT_COLOR):
         self.canvas_size = (int(canvas.cget("height")), int(canvas.cget("width")))
@@ -21,7 +21,7 @@ class Object:
         self.start_points = points
         self.rotation_pivot = self.center_point
         self.is_rot_pivot_changed = False
-        i = next(self._counter)
+        i = next(counter)
         self.name = '%s_%d' % ("Object", i)
         self.id = i
         self.pivots = None

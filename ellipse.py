@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from object import Object, DEFAULT_COLOR
+from object import Object, DEFAULT_COLOR, counter
 from pivot import *
 
 
@@ -9,7 +9,7 @@ class Ellipse(Object):
         self.rx = rx
         self.ry = ry
         super().__init__(program, canvas, points, color)
-        self.name = '%s_%d' % ("Ellipse", next(self._counter))
+        self.name = '%s_%d' % ("Ellipse", next(counter))
 
     def choose_pivot(self, canvas, pivot_type):
         print(self.center_point)
@@ -19,7 +19,7 @@ class Ellipse(Object):
             self.pivots = [
                 Pivot(canvas, self.center_point[1], self.center_point[0], self.move)
             ]
-        elif self.active_pivots == SP:
+        elif self.active_pivots == TP:
             self.pivots = [
                 Pivot(canvas, self.center_point[1],
                       self.center_point[0] - self.ry,
@@ -35,7 +35,7 @@ class Ellipse(Object):
         elif self.active_pivots == RP:
             pass
         else:
-            raise Exception("No such pivot type!")
+            raise Exception("No such pivot pivot_type!")
 
         for p in self.pivots:
             p.register_observer(self.program)
@@ -60,7 +60,9 @@ class Ellipse(Object):
         return self.points[0, 0], self.points[0, 1]
 
     def recalculate_pivots(self):
-        if self.active_pivots == SP:
+        if self.active_pivots == MP:
+            self.pivots[0].update_pos(self.center_point[1], self.center_point[0])
+        if self.active_pivots == TP:
             self.pivots[0].update_pos(self.center_point[1],
                       self.center_point[0] - self.ry)
             self.pivots[1].update_pos(self.center_point[1] + self.rx,

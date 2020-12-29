@@ -30,16 +30,16 @@ name_generator = {
 
 class Program(Observer):
 
-    def __init__(self, master, dimensions: Tuple[int, int], debug=False):
+    def __init__(self, master, dimensions: Tuple[int, int]):
+        self.object_iter = 0
         self.master = master
         self.master.title("2D Transformations")
-        self.debug = debug
 
         self.text_coords = []
         self.show_coords = False
         self.angle = 0
 
-        # second argument is an object type
+        # second argument is an object pivot_type
         self.is_object_creation: Tuple[bool, Optional[Type[Object]]] = (False, None)
         self.start_x = 0
         self.start_y = 0
@@ -82,6 +82,7 @@ class Program(Observer):
         self.objs[self.obj.id] = self.obj
         ellipse = Ellipse(self, self.canvas, np.array([[400, 400, 1]]), 40, 100)
         self.objs[ellipse.id] = ellipse
+        print(self.objs.keys())
 
         self.img = ImageTk.PhotoImage(Image.fromarray(self.canvas_arr))
 
@@ -101,6 +102,9 @@ class Program(Observer):
         self.object_name_label = tk.Label(info_frame, textvariable=self.object_name_label_var,
                                           font=font_styles["simple"])
         self.object_name_label.grid(row=1, column=1, sticky=tk.W)
+
+        tk.Button(info_frame, text="Next object >>", command=self.__next_object, font=font_styles["simple"]) \
+            .grid(row=1, column=2, sticky=tk.NW, padx=2)
 
         tk.Label(info_frame, text="Midpoint coordinates: ", font=font_styles["bold"]) \
             .grid(row=2, column=0, sticky=tk.NW)
@@ -138,13 +142,13 @@ class Program(Observer):
         tk.Label(operation_frame, text="Manipulation modes: ", font=font_styles["bold"]) \
             .grid(row=1, column=0, sticky=tk.NW)
 
-        tk.Button(operation_frame, text="Transformation mode", command=lambda: self.change_pivot_type(SP),
+        tk.Button(operation_frame, text="Transformation mode", command=lambda: self.__change_pivot_type(TP),
                   font=font_styles["simple"]) \
             .grid(row=2, column=0, sticky=tk.NW, pady=3, padx=3)
-        tk.Button(operation_frame, text="Position mode", command=lambda: self.change_pivot_type(MP),
+        tk.Button(operation_frame, text="Position mode", command=lambda: self.__change_pivot_type(MP),
                   font=font_styles["simple"]) \
             .grid(row=2, column=1, sticky=tk.NW, pady=3, padx=3)
-        tk.Button(operation_frame, text="Rotation mode", command=lambda: self.change_pivot_type(RP),
+        tk.Button(operation_frame, text="Rotation mode", command=lambda: self.__change_pivot_type(RP),
                   font=font_styles["simple"]) \
             .grid(row=2, column=2, sticky=tk.NW, pady=3, padx=3)
 
@@ -173,11 +177,20 @@ class Program(Observer):
         # Scaling
         tk.Label(operation_frame, text="Scale factor: ", font=font_styles["bold"]) \
             .grid(row=5, column=0, sticky=tk.NW)
-        self.scale_entry = tk.Entry(operation_frame)
-        self.scale_entry.insert(0, 1)
-        self.scale_entry.grid(row=5, column=1)
+
+        tk.Label(operation_frame, text="X: ", font=font_styles["bold"]) \
+            .grid(row=5, column=1, sticky=tk.NW)
+        self.scale_entry_x = tk.Entry(operation_frame)
+        self.scale_entry_x.insert(0, 1)
+        self.scale_entry_x.grid(row=5, column=2)
+
+        tk.Label(operation_frame, text="Y: ", font=font_styles["bold"]) \
+            .grid(row=5, column=3, sticky=tk.NW)
+        self.scale_entry_y = tk.Entry(operation_frame)
+        self.scale_entry_y.insert(0, 1)
+        self.scale_entry_y.grid(row=5, column=4)
         tk.Button(operation_frame, text="Scale it!", command=self.scale, font=font_styles["simple"]) \
-            .grid(row=5, column=2, sticky=tk.NW)
+            .grid(row=5, column=5, sticky=tk.NW)
 
         # Rotation
         tk.Label(operation_frame, text="Rotation angle(in degrees): ", font=font_styles["bold"]) \
@@ -219,7 +232,7 @@ class Program(Observer):
         canvas_b_entry.insert(0, 0)
         self.color_entries[CANVAS].append(canvas_b_entry)
         canvas_b_entry.grid(row=2, column=5)
-        tk.Button(customization_frame, text="Change color of it!", command=lambda: self.change_color(CANVAS),
+        tk.Button(customization_frame, text="Change color of it!", command=lambda: self.__change_color(CANVAS),
                   font=font_styles["simple"]) \
             .grid(row=2, column=6, sticky=tk.NW)
 
@@ -247,7 +260,7 @@ class Program(Observer):
         self.color_entries[LINE].append(line_b_entry)
         line_b_entry.grid(row=4, column=5)
 
-        tk.Button(customization_frame, text="Change color of it!", command=lambda: self.change_color(LINE),
+        tk.Button(customization_frame, text="Change color of it!", command=lambda: self.__change_color(LINE),
                   font=font_styles["simple"]) \
             .grid(row=4, column=6, sticky=tk.NW)
 
@@ -274,7 +287,7 @@ class Program(Observer):
         pivot_b_entry.insert(0, self.colors[PIVOT][2])
         self.color_entries[PIVOT].append(pivot_b_entry)
         pivot_b_entry.grid(row=6, column=5)
-        tk.Button(customization_frame, text="Change color of it!", command=lambda: self.change_color(PIVOT),
+        tk.Button(customization_frame, text="Change color of it!", command=lambda: self.__change_color(PIVOT),
                   font=font_styles["simple"]) \
             .grid(row=6, column=6, sticky=tk.NW, padx=2)
 
@@ -306,7 +319,7 @@ class Program(Observer):
 
         tk.Button(object_frame,
                   text="Change rotation pivot",
-                  command=self._change_rotation_pivot,
+                  command=self.__change_rotation_pivot,
                   font=font_styles["simple"]) \
             .grid(row=2, column=0, sticky=tk.NW, padx=3, pady=2)
 
@@ -326,17 +339,28 @@ class Program(Observer):
         github.bind("<Button-1>", lambda e: webbrowser.open_new("https://github.com/cyoq"))
 
         self.canvas.bind("<ButtonPress-1>", self.__on_mouse_down)
-        self.canvas.bind("<B1-Motion>", self._on_mouse_motion)
-        self.canvas.bind("<ButtonRelease-1>", self._on_mouse_release)
-        self.update()
+        self.canvas.bind("<B1-Motion>", self.__on_mouse_motion)
+        self.canvas.bind("<ButtonRelease-1>", self.__on_mouse_release)
+        self.__update()
 
     @staticmethod
-    def over9000(value, minlimit, maxlimit, entry):
+    def __over9000(value, minlimit, maxlimit, entry):
         if value < minlimit or value > maxlimit:
             entry.delete(0, 'end')
             entry.insert(0, "over9000")
             return True
         return False
+
+    def __next_object(self):
+        n = len(self.objs)
+        if n > 0:
+            self.object_iter += 1
+            self.object_iter %= n
+            obj_list = list(self.objs.values())
+            if obj_list[self.object_iter] is self.current_object:
+                self.object_iter += 1
+            self.current_object = obj_list[self.object_iter]
+            self.__update()
 
     def delete_current_object(self):
         del self.objs[self.current_object.id]
@@ -346,7 +370,7 @@ class Program(Observer):
         else:
             self.current_object = None
 
-        self.update()
+        self.__update()
 
     def __on_mouse_down(self, e):
         if self.is_object_creation[0]:
@@ -356,80 +380,82 @@ class Program(Observer):
         for o in self.objs.values():
             if o.is_inside(e.y, e.x):
                 self.current_object = o
+                self.__update()
+                break
 
         if self.is_rotation_pivot_change:
             new_rot_pivot = Pivot(self.canvas, e.x, e.y, lambda x, y: None, stationary=True)
             self.current_object.update_rotation_pivot(new_rot_pivot)
 
-    def _on_mouse_motion(self, e):
+    def __on_mouse_motion(self, e):
         if self.is_object_creation[0]:
             cls = self.is_object_creation[1]
             self.last_created = cls.create_object((self.start_y, self.start_x), (e.y, e.x), self, self.canvas)
-            self.update()
+            self.__update()
 
-    def _on_mouse_release(self, e):
+    def __on_mouse_release(self, e):
         if self.is_object_creation[0]:
             if self.current_object is not None:
                 self.current_object.choose_pivot(self.canvas, MP)
-                self.update()
+                self.__update()
             self.current_object = self.last_created
             self.objs[self.last_created.id] = self.last_created
             self.last_created = None
             self.is_object_creation = (False, None)
             self.current_object.choose_pivot(self.canvas, MP)
-            self.update()
+            self.__update()
 
         if self.is_rotation_pivot_change:
             self.is_rotation_pivot_change = False
-            self.update()
+            self.__update()
 
-    def _change_rotation_pivot(self):
+    def __change_rotation_pivot(self):
         self.is_rotation_pivot_change = True
 
     def __rotation_pivot_to_center(self):
         if self.current_object is not None:
             self.current_object.rotation_pivot_to_center()
-            self.update()
+            self.__update()
 
     def create_object(self, cls: Type[Object]):
         self.is_object_creation = (True, cls)
 
     def check_show_coords(self):
         self.show_coords = self.needs_text_coords.get()
-        self.update()
+        self.__update()
 
-    def change_color(self, key):
+    def __change_color(self, key):
         r = int(self.color_entries[key][0].get())
         g = int(self.color_entries[key][1].get())
         b = int(self.color_entries[key][2].get())
-        is_r = self.over9000(r, 0, 255, self.color_entries[key][0])
-        is_g = self.over9000(g, 0, 255, self.color_entries[key][1])
-        is_b = self.over9000(b, 0, 255, self.color_entries[key][2])
+        is_r = self.__over9000(r, 0, 255, self.color_entries[key][0])
+        is_g = self.__over9000(g, 0, 255, self.color_entries[key][1])
+        is_b = self.__over9000(b, 0, 255, self.color_entries[key][2])
         over = is_r or is_g or is_b
         if not over:
             if key == LINE:
                 self.current_object.color = (r, g, b)
             else:
                 self.colors[key] = (r, g, b)
-            self.update()
+            self.__update()
 
-    def change_pivot_type(self, type):
-        self.current_object.choose_pivot(self.canvas, type)
-        self.update()
+    def __change_pivot_type(self, pivot_type):
+        self.current_object.choose_pivot(self.canvas, pivot_type)
+        self.__update()
 
     def rotate(self):
-        # messagebox.showerror("Error", "Incorrect button")
         angle = int(self.rot_entry.get())
         self.angle += angle
         self.angle %= 360
         self.current_object.rotate(np.deg2rad(self.angle), point=self.current_object.center_point)
         self.current_object.recalculate_pivots()
-        self.update()
+        self.__update()
 
     def scale(self):
-        scale_factor = float(self.scale_entry.get())
-        self.current_object.scale(scale_factor, scale_factor)
-        self.update()
+        x = float(self.scale_entry_x.get())
+        y = float(self.scale_entry_y.get())
+        self.current_object.scale(x, y)
+        self.__update()
 
     def move(self):
         # TODO: Validation
@@ -446,12 +472,12 @@ class Program(Observer):
             over = True
         if not over:
             self.current_object.move(y, x)
-            self.update()
+            self.__update()
 
     def notify(self):
-        self.update()
+        self.__update()
 
-    def update(self):
+    def __update(self):
 
         if self.current_object is not None:
             self.object_name_label_var.set(self.current_object.name)
@@ -468,13 +494,6 @@ class Program(Observer):
 
         for o in self.objs.values():
             o.draw(self.canvas_arr)
-
-        # self.current_object.flood_fill(self.current_object.center_point[0],
-        #                                self.current_object.center_point[1],
-        #                                self.canvas_arr,
-        #                                (0, 0, 0),
-        #                                (0, 255, 0),
-        #                                (255, 0, 0))
 
         if self.last_created is not None:
             self.last_created.draw(self.canvas_arr, self.colors[LINE])

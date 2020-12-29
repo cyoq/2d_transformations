@@ -4,7 +4,7 @@ from observer import Observable
 from generator import gen
 
 MP = "M"  # Move pivot
-SP = "S"  # Scale pivot
+TP = "T"  # Transformation pivot
 RP = "R"  # Rotation pivot
 
 
@@ -60,9 +60,8 @@ class Pivot(Observable):
         # self.canvas.bind("<1>", self.mouse_down)
 
     def clear_last_movable(self, e):
-        pass
-        # self.canvas.config(cursor="")
-        # self.last_movable = None
+        self.canvas.config(cursor="")
+        self.last_movable = None
 
     def midpoint(self):
         midx, midy = (self.points[0] + self.points[2]) // 2, \
@@ -150,6 +149,11 @@ class Pivot(Observable):
             self.is_allowed_to_move = True
         else:
             self.is_allowed_to_move = False
+
+    def is_inside(self, x, y):
+        if self.points[0] < x < self.points[2] and self.points[1] < y < self.points[3]:
+            return True
+        return False
 
     def _from_rgb(self, rgb):
         """
