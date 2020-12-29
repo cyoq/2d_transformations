@@ -10,12 +10,14 @@ RP = "R"  # Rotation pivot
 
 class Pivot(Observable):
 
-    def __init__(self, canvas, x, y, f, width: int = 10, color: str = "blue", stationary=False,
-                 angle_based=False, center: "Pivot" = None, radius: int = None):
+    def __init__(self, canvas, x, y, f, width: int = 8, color: str = "blue", stationary=False,
+                 angle_based=False, center: "Pivot" = None, radius: int = None,
+                 is_moving_on_line=False, axis: str =None):
         super().__init__()
         self.width = width
         self.color = color
         self.canvas = canvas
+        self.canvas_size = (int(canvas.cget("height")), int(canvas.cget("width")))
         self.f = f
         self.angle_based = angle_based
         if angle_based:
@@ -24,6 +26,12 @@ class Pivot(Observable):
             raise Exception("no center pivot and/or radius for angle based movement!")
         self.center_pivot = center
         self.radius = radius
+
+        if is_moving_on_line and axis is None:
+            raise Exception("Cannot create moving on line pivot without an axis!")
+
+        self.is_moving_on_line = is_moving_on_line
+        self.axis = axis
 
         x = x - width // 2
         y = y - width // 2
@@ -75,30 +83,50 @@ class Pivot(Observable):
 
     def move_rect(self, event):
         if self.is_allowed_to_move:
-            if not self.angle_based:
+            if not self.angle_based and not self.is_moving_on_line:
                 points = self.points
                 dx, dy = event.x - points[0], event.y - points[1]
-                points[0] = event.x
-                points[1] = event.y
-                points[2] = event.x + self.width
-                points[3] = event.y + self.width
+                if event.x + self.width < self.canvas_size[1] and event.y + self.width < self.canvas_size[0]:
+                    points[0] = event.x
+                    points[1] = event.y
+                    points[2] = event.x + self.width
+                    points[3] = event.y + self.width
 
-                self.f(dy, dx)
+                    self.f(dy, dx)
+                    self.notify_observers()
+
+            elif self.is_moving_on_line:
+
+                if self.axis == "x":
+                    if self.points[2] + self.width < self.canvas_size[1]:
+                        dx = event.x - self.points[0]
+                        self.points[0] = event.x
+                        self.points[2] = event.x + self.width
+                        self.f(dx)
+                elif self.axis == "y":
+                    if self.points[2] + self.width < self.canvas_size[0]:
+                        dx = event.y - self.points[1]
+                        self.points[1] = event.y
+                        self.points[3] = event.y + self.width
+                        self.f(dx)
+                else:
+                    raise Exception("Incorrect axis argument! Should be 'x' or 'y'.")
+
                 self.notify_observers()
             else:
-                # points = self.points
                 cmidx, cmidy = self.center_pivot.midpoint()
                 angle = np.arctan2(event.y - cmidy, event.x - cmidx)
 
                 closest = (cmidx + self.radius * np.cos(angle), cmidy + self.radius * np.sin(angle))
-                self.points[0] = closest[0]
-                self.points[1] = closest[1]
-                self.points[2] = closest[0] + self.width
-                self.points[3] = closest[1] + self.width
+                if closest[0] + self.width < self.canvas_size[1] and closest[1] + self.width < self.canvas_size[0]:
+                    self.points[0] = closest[0]
+                    self.points[1] = closest[1]
+                    self.points[2] = closest[0] + self.width
+                    self.points[3] = closest[1] + self.width
 
-                self.f(angle)
-                self.angle = angle
-                self.notify_observers()
+                    self.f(angle)
+                    self.angle = angle
+                    self.notify_observers()
 
     def draw(self, color):
 

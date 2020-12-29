@@ -28,7 +28,7 @@ class Object:
     def choose_pivot(self, canvas, pivot_type):
         pass
 
-    def manual_point_move(self, dx, dy, i):
+    def manual_point_move(self, *args, **kwargs):
         pass
 
     def radius(self):
@@ -114,6 +114,7 @@ class Object:
             point_matrix[:, 0] *= point[0]
             point_matrix[:, 1] *= point[1]
 
+        old_angle = self.angle
         self.angle = np.rint(np.rad2deg(angle))
 
         # a = np.deg2rad(self.angle)
@@ -130,5 +131,11 @@ class Object:
         else:
             self.points = point_matrix + ((self.start_points - point_matrix) @ matrix)
 
+        max = np.max(self.points)
+        min = np.min(self.points)
+
+        if min <= 0 or max >= self.canvas_size[0]:
+            self.points = (self.points - point_matrix) @ np.linalg.inv(matrix) + point_matrix
+            self.angle = old_angle
         # self.points = self.points.astype(np.int32)
         self.points = np.rint(self.points).astype(int)  # works well with a point in the center

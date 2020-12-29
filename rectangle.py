@@ -19,27 +19,27 @@ class Rectangle(Object):
         canvas.delete("all")
         self.active_pivots = pivot_type
         if self.active_pivots == MP:
-            self.pivots = [Pivot(canvas, self.center_point[0], self.center_point[1], self.move, width=8)]
+            self.pivots = [Pivot(canvas, self.center_point[0], self.center_point[1], self.move)]
         elif self.active_pivots == SP:
             self.pivots = [
                 # 2nd and 4th pivot has different arguments for manual_scale function
                 # because x and y's are swapped around
                 Pivot(canvas, self.points[0, 0], self.points[0, 1],
-                      lambda x, y: self.manual_point_move(x, y, 0), width=8),
+                      lambda x, y: self.manual_point_move(x, y, 0)),
                 Pivot(canvas, self.points[1, 0], self.points[1, 1],
-                      lambda x, y: self.manual_point_move(x, y, 3), width=8),
+                      lambda x, y: self.manual_point_move(x, y, 3)),
                 Pivot(canvas, self.points[2, 0], self.points[2, 1],
-                      lambda x, y: self.manual_point_move(x, y, 2), width=8),
+                      lambda x, y: self.manual_point_move(x, y, 2)),
                 Pivot(canvas, self.points[3, 0], self.points[3, 1],
-                      lambda x, y: self.manual_point_move(x, y, 1), width=8),
+                      lambda x, y: self.manual_point_move(x, y, 1)),
             ]
         elif self.active_pivots == RP:
             radius = self.radius()
             stationary_pivot = Pivot(canvas, self.center_point[0], self.center_point[1],
-                                     lambda x, y: None, width=8, stationary=True)
+                                     lambda x, y: None, stationary=True)
 
             self.pivots = [Pivot(canvas, self.center_point[0] + radius, self.center_point[1],
-                                 lambda a: self.rotate(a, point=self.center_point), width=8,
+                                 lambda a: self.rotate(a, point=self.center_point),
                                  angle_based=True, center=stationary_pivot, radius=radius),
                            stationary_pivot
                            ]

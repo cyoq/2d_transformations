@@ -4,6 +4,7 @@ from typing import Tuple, Type, Optional
 from PIL import Image, ImageTk
 
 from consts import ROT_ANGLE
+from ellipse import Ellipse
 from generator import Generator
 from object import Object
 from observer import Observer
@@ -76,6 +77,8 @@ class Program(Observer):
         self.current_object = self.obj
 
         self.objs[self.obj.id] = self.obj
+        ellipse = Ellipse(self, self.canvas, np.array([[400, 400, 1]]), 40, 100)
+        self.objs[ellipse.id] = ellipse
 
         self.img = ImageTk.PhotoImage(Image.fromarray(self.canvas_arr))
 
@@ -287,8 +290,8 @@ class Program(Observer):
             .grid(row=1, column=0, sticky=tk.NW, padx=3, pady=2)
 
         tk.Button(object_frame,
-                  text="Create a rectangle",
-                  command=lambda: self.create_object(Rectangle),
+                  text="Create an ellipse",
+                  command=lambda: self.create_object(Ellipse),
                   font=font_styles["simple"]) \
             .grid(row=1, column=1, sticky=tk.NW, padx=3, pady=2)
 
@@ -411,6 +414,7 @@ class Program(Observer):
         self.update()
 
     def update(self):
+
         if self.current_object is not None:
             self.object_name_label_var.set(self.current_object.name)
 
@@ -454,4 +458,4 @@ class Program(Observer):
                     self.canvas.create_text(p[1] + 10, p[0] - 10,
                                             text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red"))
 
-        # print(self.canvas.find_all(), "length: ", len(self.canvas.find_all()))
+        print(self.canvas.find_all(), "length: ", len(self.canvas.find_all()))
