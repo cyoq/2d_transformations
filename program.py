@@ -44,6 +44,8 @@ class Program(Observer):
         self.start_y = 0
         self.last_created = None
 
+        self.is_rotation_pivot_change = False
+
         self.image = None
         self.current_object: Optional[Type[Object]] = None
 
@@ -301,6 +303,18 @@ class Program(Observer):
                   font=font_styles["simple"]) \
             .grid(row=1, column=2, sticky=tk.NW, padx=3, pady=2)
 
+        tk.Button(object_frame,
+                  text="Change rotation pivot",
+                  command=self._change_rotation_pivot,
+                  font=font_styles["simple"]) \
+            .grid(row=2, column=0, sticky=tk.NW, padx=3, pady=2)
+
+        tk.Button(object_frame,
+                  text="Rotation pivot to object's center",
+                  command=self.__rotation_pivot_to_center,
+                  font=font_styles["simple"]) \
+            .grid(row=2, column=1, sticky=tk.NW, padx=3, pady=2)
+
         object_frame.grid(row=3, column=1, columnspan=6, rowspan=6, sticky=tk.NW)
 
         self.canvas.bind("<ButtonPress-1>", self._on_mouse_down)
@@ -335,6 +349,10 @@ class Program(Observer):
             if o.is_inside(e.y, e.x):
                 self.current_object = o
 
+        if self.is_rotation_pivot_change:
+            new_rot_pivot = Pivot(self.canvas, e.x, e.y, lambda x, y: None, stationary=True)
+            self.current_object.update_rotation_pivot(new_rot_pivot)
+
     def _on_mouse_motion(self, e):
         if self.is_object_creation[0]:
             cls = self.is_object_creation[1]
@@ -351,6 +369,18 @@ class Program(Observer):
             self.last_created = None
             self.is_object_creation = (False, None)
             self.current_object.choose_pivot(self.canvas, MP)
+            self.update()
+
+        if self.is_rotation_pivot_change:
+            self.is_rotation_pivot_change = False
+            self.update()
+
+    def _change_rotation_pivot(self):
+        self.is_rotation_pivot_change = True
+
+    def __rotation_pivot_to_center(self):
+        if self.current_object is not None:
+            self.current_object.rotation_pivot_to_center()
             self.update()
 
     def create_object(self, cls: Type[Object]):

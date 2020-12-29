@@ -11,8 +11,8 @@ RP = "R"  # Rotation pivot
 class Pivot(Observable):
 
     def __init__(self, canvas, x, y, f, width: int = 8, color: str = "blue", stationary=False,
-                 angle_based=False, center: "Pivot" = None, radius: int = None,
-                 is_moving_on_line=False, axis: str =None):
+                 angle_based=False, rotation_pivot: "Pivot" = None, distance_to_rot_point: int = None,
+                 is_moving_on_line=False, axis: str = None):
         super().__init__()
         self.width = width
         self.color = color
@@ -22,10 +22,10 @@ class Pivot(Observable):
         self.angle_based = angle_based
         if angle_based:
             self.angle = 0
-        if angle_based is True and center is None and radius is None:
-            raise Exception("no center pivot and/or radius for angle based movement!")
-        self.center_pivot = center
-        self.radius = radius
+        if angle_based is True and rotation_pivot is None and distance_to_rot_point is None:
+            raise Exception("no rotation_pivot pivot and/or distance_to_rot_point for angle based movement!")
+        self.rotation_pivot = rotation_pivot
+        self.distance_to_rot_point = distance_to_rot_point
 
         if is_moving_on_line and axis is None:
             raise Exception("Cannot create moving on line pivot without an axis!")
@@ -47,6 +47,7 @@ class Pivot(Observable):
         #                                         self.points[3], fill=self.color, tag=self.tag)
 
         self.is_allowed_to_move = False
+        self.stationary = stationary
         if not stationary:
             self.canvas.tag_bind(self.tag, '<B1-Motion>', self.move_rect)
             self.canvas.tag_bind(self.tag, "<Motion>", self.check_hand)
@@ -114,10 +115,10 @@ class Pivot(Observable):
 
                 self.notify_observers()
             else:
-                cmidx, cmidy = self.center_pivot.midpoint()
+                cmidx, cmidy = self.rotation_pivot.midpoint()
                 angle = np.arctan2(event.y - cmidy, event.x - cmidx)
 
-                closest = (cmidx + self.radius * np.cos(angle), cmidy + self.radius * np.sin(angle))
+                closest = (cmidx + self.distance_to_rot_point * np.cos(angle), cmidy + self.distance_to_rot_point * np.sin(angle))
                 if closest[0] + self.width < self.canvas_size[1] and closest[1] + self.width < self.canvas_size[0]:
                     self.points[0] = closest[0]
                     self.points[1] = closest[1]

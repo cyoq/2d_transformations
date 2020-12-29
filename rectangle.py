@@ -40,7 +40,7 @@ class Rectangle(Object):
 
             self.pivots = [Pivot(canvas, self.center_point[0] + radius, self.center_point[1],
                                  lambda a: self.rotate(a, point=self.center_point),
-                                 angle_based=True, center=stationary_pivot, radius=radius),
+                                 angle_based=True, rotation_pivot=stationary_pivot, distance_to_rot_point=radius),
                            stationary_pivot
                            ]
         else:
@@ -70,6 +70,27 @@ class Rectangle(Object):
         return ((self.points[0, 0] + self.points[2, 0]) // 2,
                 (self.points[0, 1] + self.points[2, 1]) // 2)
 
+    def update_rotation_pivot(self, rotation_pivot: Pivot):
+        self.is_rot_pivot_changed = True
+        if self.active_pivots != RP:
+            raise Exception("Point must be set when rotation mode is on!")
+        if not rotation_pivot.stationary:
+            raise Exception("Pivot must be stationary!")
+        self.pivots[0].rotation_pivot = rotation_pivot
+        points = rotation_pivot.points
+        self.pivots[0].f = lambda angle: self.rotate(angle, point=(points[1], points[2]))
+        self.pivots[1] = rotation_pivot
+        self.recalculate_pivots()
+
+    def rotation_pivot_to_center(self):
+        print(self.pivots)
+        self.pivots[1].points[0] = self.center_point[0]
+        self.pivots[1].points[1] = self.center_point[1]
+
+        self.pivots[0].f = lambda angle: self.rotate(angle, point=self.center_point)
+        self.is_rot_pivot_changed = False
+        self.recalculate_pivots()
+
     def recalculate_pivots(self):
         if self.active_pivots == MP:
             midx, midy = self.midpoint()
@@ -81,7 +102,8 @@ class Rectangle(Object):
             self.pivots[3].update_pos(self.points[1, 1], self.points[1, 0])
         elif self.active_pivots == RP:
             midx, midy = self.midpoint()
-            self.pivots[1].update_pos(midy, midx)
+            if not self.is_rot_pivot_changed:
+                self.pivots[1].update_pos(midy, midx)
             self.pivots[0].update_pos(midy + self.radius(), midx)
         else:
             raise Exception("No such pivot type!")

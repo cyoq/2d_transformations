@@ -19,6 +19,8 @@ class Object:
         self.program = program
         self.color = color
         self.start_points = points
+        self.rotation_pivot = self.center_point
+        self.is_rot_pivot_changed = False
         i = next(self._counter)
         self.name = '%s_%d' % ("Object", i)
         self.id = i
@@ -41,6 +43,12 @@ class Object:
         pass
 
     def is_inside(self, x, y):
+        pass
+
+    def update_rotation_pivot(self, rotation_point):
+        pass
+
+    def rotation_pivot_to_center(self):
         pass
 
     @classmethod
@@ -138,4 +146,4 @@ class Object:
             self.points = (self.points - point_matrix) @ np.linalg.inv(matrix) + point_matrix
             self.angle = old_angle
         # self.points = self.points.astype(np.int32)
-        self.points = np.rint(self.points).astype(int)  # works well with a point in the center
+        self.points = np.rint(self.points).astype(int)  # works well with a point in the rotation_pivot
