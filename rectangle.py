@@ -1,21 +1,24 @@
 import itertools
 from typing import Tuple
 
+import tkinter as tk
+
 from generator import gen
 from line import Line
 from object import Object, DEFAULT_COLOR, counter
 from pivot import *
+from program import Program
 
 
 class Rectangle(Object):
 
     _counter = itertools.count()
 
-    def __init__(self, program, canvas, points, color=DEFAULT_COLOR):
+    def __init__(self, program: Program, canvas: tk.Canvas, points: np.ndarray, color: Tuple[int, int, int] = DEFAULT_COLOR):
         super().__init__(program, canvas, points, color=color)
         self.name = '%s_%d' % ("Rectangle", next(counter))
 
-    def choose_pivot(self, canvas, pivot_type):
+    def choose_pivot(self, canvas: tk.Canvas, pivot_type: str):
         canvas.delete("all")
         self.active_pivots = pivot_type
         if self.active_pivots == MP:
@@ -51,7 +54,7 @@ class Rectangle(Object):
 
         self.recalculate_pivots()
 
-    def manual_point_move(self, dx, dy, i):
+    def manual_point_move(self, dx: int, dy: int, i: int):
         if i == 0:
             self.points[i, 0] += dx
             self.points[i, 1] += dy
@@ -63,12 +66,12 @@ class Rectangle(Object):
 
         self.start_points = self.points
 
-    def radius(self):
+    def radius(self) -> int:
         midx, midy = self.midpoint()
         vector = (midx - self.points[1, 0], midy - self.points[1, 1])
         return (vector[0] ** 2 + vector[1] ** 2) ** 0.5
 
-    def midpoint(self):
+    def midpoint(self) -> Tuple[int, int]:
         return ((self.points[0, 0] + self.points[2, 0]) // 2,
                 (self.points[0, 1] + self.points[2, 1]) // 2)
 
@@ -110,7 +113,7 @@ class Rectangle(Object):
             raise Exception("No such pivot pivot_type!")
 
     @classmethod
-    def create_object(cls, start_point, end_point, program, canvas):
+    def create_object(cls, start_point: Tuple[int, int], end_point: Tuple[int, int], program: Program, canvas: tk.Canvas) -> "Rectangle":
         points = np.array([
             [start_point[0], start_point[1], 1],
             [end_point[0], start_point[1], 1],
@@ -120,13 +123,13 @@ class Rectangle(Object):
         ])
         return cls(program, canvas, points)
 
-    def draw(self, canvas_arr, color=DEFAULT_COLOR):
+    def draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int] = DEFAULT_COLOR):
         if color != DEFAULT_COLOR:
             self.color = color
         for pp, p in zip(self.points, self.points[1:]):
             Line.draw(canvas_arr, pp[0], pp[1], p[0], p[1], self.color)
 
-    def is_inside(self, x, y):
+    def is_inside(self, x: int, y: int) -> bool:
         if self.points[0, 0] <= x <= self.points[2, 0] and self.points[0, 1] <= y <= self.points[2, 1]:
             return True
         for p in self.pivots:
@@ -168,10 +171,10 @@ class Rectangle(Object):
                 # queue.append((item[0] + 1, item[1] - 1))
                 # queue.append((item[0] - 1, item[1] - 1))
 
-    def move(self, xs, ys):
+    def move(self, xs: int, ys: int):
         super().move(xs, ys)
 
-    def scale(self, x, y):
+    def scale(self, x: float, y: float):
         super().scale(x, y)
 
     def rotate(self, angle: int, point: Tuple[int, int] = None):

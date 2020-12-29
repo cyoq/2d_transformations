@@ -1,5 +1,5 @@
 import tkinter as tk
-from typing import Tuple, Type, Optional
+from typing import Tuple, Type, Optional, List
 import webbrowser
 
 from PIL import Image, ImageTk
@@ -23,10 +23,6 @@ CANVAS = "canvas"
 PIVOT = "pivot"
 LINE = "line"
 
-name_generator = {
-    "Rectangle": Generator().generator()
-}
-
 
 class Program(Observer):
 
@@ -35,17 +31,17 @@ class Program(Observer):
         self.master = master
         self.master.title("2D Transformations")
 
-        self.text_coords = []
-        self.show_coords = False
-        self.angle = 0
+        self.text_coords: List[int] = []
+        self.show_coords: bool = False
+        self.angle: int = 0
 
         # second argument is an object pivot_type
         self.is_object_creation: Tuple[bool, Optional[Type[Object]]] = (False, None)
-        self.start_x = 0
-        self.start_y = 0
-        self.last_created = None
+        self.start_x: int = 0
+        self.start_y: int = 0
+        self.last_created: Optional[Type[Object]] = None
 
-        self.is_rotation_pivot_change = False
+        self.is_rotation_pivot_change: bool = False
 
         self.image = None
         self.current_object: Optional[Type[Object]] = None
@@ -65,7 +61,7 @@ class Program(Observer):
 
         self.canvas = tk.Canvas(master, width=self.w, height=self.h)
 
-        self.canvas_arr = np.zeros((self.h, self.w, 3), dtype=np.uint8)
+        self.canvas_arr: np.ndarray = np.zeros((self.h, self.w, 3), dtype=np.uint8)
 
         self.objs = {}
 
@@ -80,13 +76,11 @@ class Program(Observer):
         self.current_object = self.obj
 
         self.objs[self.obj.id] = self.obj
+
         ellipse = Ellipse(self, self.canvas, np.array([[400, 400, 1]]), 40, 100)
         self.objs[ellipse.id] = ellipse
-        print(self.objs.keys())
 
         self.img = ImageTk.PhotoImage(Image.fromarray(self.canvas_arr))
-
-        # self.canvas.create_image(0, 0, anchor='nw', image=self.img)
 
         self.canvas.grid(row=0, column=0, rowspan=4)
 
@@ -122,14 +116,14 @@ class Program(Observer):
                                            font=font_styles["simple"])
         self.object_angle_label.grid(row=3, column=1, sticky=tk.W)
 
-        tk.Button(info_frame, text="Delete current object", command=self.delete_current_object,
+        tk.Button(info_frame, text="Delete current object", command=self.__delete_current_object,
                   font=font_styles["simple"]) \
             .grid(row=4, column=0, pady=2, sticky=tk.NW)
 
         self.needs_text_coords = tk.IntVar()
         self.needs_text_coords.set(0)
         self.checkbox = tk.Checkbutton(info_frame, text="Show coordinates?", font=font_styles["simple"],
-                                       variable=self.needs_text_coords, command=self.check_show_coords)
+                                       variable=self.needs_text_coords, command=self.__check_show_coords)
         self.checkbox.grid(row=5, column=0, sticky=tk.NW)
 
         info_frame.grid(row=0, column=1, columnspan=3, rowspan=6, sticky=tk.NW)
@@ -171,7 +165,7 @@ class Program(Observer):
         self.move_entry_y.insert(0, 0)
         self.move_entry_y.grid(row=4, column=4)
 
-        tk.Button(operation_frame, text="Move it!", command=self.move, font=font_styles["simple"]) \
+        tk.Button(operation_frame, text="Move it!", command=self.__move, font=font_styles["simple"]) \
             .grid(row=4, column=5, sticky=tk.N, padx=2, pady=2)
 
         # Scaling
@@ -189,7 +183,7 @@ class Program(Observer):
         self.scale_entry_y = tk.Entry(operation_frame)
         self.scale_entry_y.insert(0, 1)
         self.scale_entry_y.grid(row=5, column=4)
-        tk.Button(operation_frame, text="Scale it!", command=self.scale, font=font_styles["simple"]) \
+        tk.Button(operation_frame, text="Scale it!", command=self.__scale, font=font_styles["simple"]) \
             .grid(row=5, column=5, sticky=tk.NW)
 
         # Rotation
@@ -198,7 +192,7 @@ class Program(Observer):
         self.rot_entry = tk.Entry(operation_frame)
         self.rot_entry.insert(0, ROT_ANGLE)
         self.rot_entry.grid(row=6, column=1)
-        tk.Button(operation_frame, text="Rotate it!", command=self.rotate, font=font_styles["simple"]) \
+        tk.Button(operation_frame, text="Rotate it!", command=self.__rotate, font=font_styles["simple"]) \
             .grid(row=6, column=2, sticky=tk.NW)
 
         operation_frame.grid(row=1, column=1, columnspan=6, rowspan=7, sticky=tk.NW)
@@ -301,19 +295,19 @@ class Program(Observer):
 
         tk.Button(object_frame,
                   text="Create a rectangle",
-                  command=lambda: self.create_object(Rectangle),
+                  command=lambda: self.__create_object(Rectangle),
                   font=font_styles["simple"]) \
             .grid(row=1, column=0, sticky=tk.NW, padx=3, pady=2)
 
         tk.Button(object_frame,
                   text="Create an ellipse",
-                  command=lambda: self.create_object(Ellipse),
+                  command=lambda: self.__create_object(Ellipse),
                   font=font_styles["simple"]) \
             .grid(row=1, column=1, sticky=tk.NW, padx=3, pady=2)
 
         tk.Button(object_frame,
                   text="Create a rectangle",
-                  command=lambda: self.create_object(Rectangle),
+                  command=lambda: self.__create_object(Rectangle),
                   font=font_styles["simple"]) \
             .grid(row=1, column=2, sticky=tk.NW, padx=3, pady=2)
 
@@ -344,7 +338,7 @@ class Program(Observer):
         self.__update()
 
     @staticmethod
-    def __over9000(value, minlimit, maxlimit, entry):
+    def __over9000(value: int, minlimit: int, maxlimit: int, entry: tk.Entry) -> bool:
         if value < minlimit or value > maxlimit:
             entry.delete(0, 'end')
             entry.insert(0, "over9000")
@@ -353,24 +347,27 @@ class Program(Observer):
 
     def __next_object(self):
         n = len(self.objs)
-        if n > 0:
-            self.object_iter += 1
+        if n > 1:
             self.object_iter %= n
             obj_list = list(self.objs.values())
             if obj_list[self.object_iter] is self.current_object:
                 self.object_iter += 1
+                self.object_iter %= n
+
             self.current_object = obj_list[self.object_iter]
+            self.object_iter += 1
             self.__update()
 
-    def delete_current_object(self):
-        del self.objs[self.current_object.id]
-        objs = list(self.objs.values())
-        if len(objs) > 0:
-            self.current_object = objs[0]
-        else:
-            self.current_object = None
+    def __delete_current_object(self):
+        if self.current_object is not None:
+            del self.objs[self.current_object.id]
+            objs = list(self.objs.values())
+            if len(objs) > 0:
+                self.current_object = objs[0]
+            else:
+                self.current_object = None
 
-        self.__update()
+            self.__update()
 
     def __on_mouse_down(self, e):
         if self.is_object_creation[0]:
@@ -417,14 +414,14 @@ class Program(Observer):
             self.current_object.rotation_pivot_to_center()
             self.__update()
 
-    def create_object(self, cls: Type[Object]):
+    def __create_object(self, cls: Type[Object]):
         self.is_object_creation = (True, cls)
 
-    def check_show_coords(self):
+    def __check_show_coords(self):
         self.show_coords = self.needs_text_coords.get()
         self.__update()
 
-    def __change_color(self, key):
+    def __change_color(self, key: str):
         r = int(self.color_entries[key][0].get())
         g = int(self.color_entries[key][1].get())
         b = int(self.color_entries[key][2].get())
@@ -439,11 +436,11 @@ class Program(Observer):
                 self.colors[key] = (r, g, b)
             self.__update()
 
-    def __change_pivot_type(self, pivot_type):
+    def __change_pivot_type(self, pivot_type: str) -> None:
         self.current_object.choose_pivot(self.canvas, pivot_type)
         self.__update()
 
-    def rotate(self):
+    def __rotate(self):
         angle = int(self.rot_entry.get())
         self.angle += angle
         self.angle %= 360
@@ -451,25 +448,19 @@ class Program(Observer):
         self.current_object.recalculate_pivots()
         self.__update()
 
-    def scale(self):
+    def __scale(self):
         x = float(self.scale_entry_x.get())
         y = float(self.scale_entry_y.get())
         self.current_object.scale(x, y)
         self.__update()
 
-    def move(self):
+    def __move(self):
         # TODO: Validation
         x = int(self.move_entry_x.get())
         y = int(self.move_entry_y.get())
-        over = False
-        if x < 0 or x > self.w:
-            self.move_entry_x.delete(0, 'end')
-            self.move_entry_x.insert(0, "over9000")
-            over = True
-        elif y < 0 or y > self.h:
-            self.move_entry_y.delete(0, 'end')
-            self.move_entry_y.insert(0, "over9000")
-            over = True
+        is_x = self.__over9000(x, 0, self.w, self.move_entry_x)
+        is_y = self.__over9000(y, 0, self.h, self.move_entry_y)
+        over = is_x or is_y
         if not over:
             self.current_object.move(y, x)
             self.__update()
@@ -486,6 +477,11 @@ class Program(Observer):
             self.mid_label_var.set("({}, {})".format(midy, midx))
 
             self.angle_label_var.set("{} degrees".format(int(self.current_object.angle)))
+        else:
+            self.object_name_label_var.set("-")
+            self.mid_label_var.set("({}, {})".format("-", "-"))
+            self.angle_label_var.set("{} degrees".format("-"))
+
         # It is needed to clear canvas items, so that no memory leak would appear
         self.canvas.delete(self.image)
 
@@ -510,9 +506,10 @@ class Program(Observer):
             for t in self.text_coords:
                 self.canvas.delete(t)
 
-            for p in self.current_object.points:
-                self.text_coords.append(
-                    self.canvas.create_text(p[1] + 10, p[0] - 10,
-                                            text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red"))
+            if self.current_object:
+                for p in self.current_object.points:
+                    self.text_coords.append(
+                        self.canvas.create_text(p[1] + 10, p[0] - 10,
+                                                text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red"))
 
         # print(self.canvas.find_all(), "length: ", len(self.canvas.find_all()))

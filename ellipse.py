@@ -1,17 +1,24 @@
+import tkinter as tk
 from typing import Tuple
 
 from object import Object, DEFAULT_COLOR, counter
 from pivot import *
+from program import Program
 
 
 class Ellipse(Object):
-    def __init__(self, program, canvas, points, rx, ry, color=DEFAULT_COLOR):
+    def __init__(self, program: Program,
+                 canvas: tk.Canvas,
+                 points: np.ndarray,
+                 rx: int,
+                 ry: int,
+                 color: Tuple[int, int, int] = DEFAULT_COLOR):
         self.rx = rx
         self.ry = ry
         super().__init__(program, canvas, points, color)
         self.name = '%s_%d' % ("Ellipse", next(counter))
 
-    def choose_pivot(self, canvas, pivot_type):
+    def choose_pivot(self, canvas: tk.Canvas, pivot_type: str):
         print(self.center_point)
         canvas.delete("all")
         self.active_pivots = pivot_type
@@ -42,7 +49,7 @@ class Ellipse(Object):
 
         self.recalculate_pivots()
 
-    def manual_point_move(self, diff, axis):
+    def manual_point_move(self, diff: int, axis: str):
         print(self.rx, self.ry)
         if axis == "y":
             if self.ry - diff > 0:
@@ -53,10 +60,10 @@ class Ellipse(Object):
 
         self.recalculate_pivots()
 
-    def radius(self):
+    def radius(self) -> Tuple[int, int]:
         return self.rx, self.ry
 
-    def midpoint(self):
+    def midpoint(self) -> Tuple[int, int]:
         return self.points[0, 0], self.points[0, 1]
 
     def recalculate_pivots(self):
@@ -64,19 +71,23 @@ class Ellipse(Object):
             self.pivots[0].update_pos(self.center_point[1], self.center_point[0])
         if self.active_pivots == TP:
             self.pivots[0].update_pos(self.center_point[1],
-                      self.center_point[0] - self.ry)
+                                      self.center_point[0] - self.ry)
             self.pivots[1].update_pos(self.center_point[1] + self.rx,
-                      self.center_point[0])
+                                      self.center_point[0])
 
-    def is_inside(self, x, y):
+    def is_inside(self, x: int, y: int) -> bool:
         dx = (self.center_point[0] - x) / self.rx
         dy = (self.center_point[1] - y) / self.ry
-        if dx**2 + dy**2 <= 1:
+        if dx ** 2 + dy ** 2 <= 1:
             return True
         return False
 
     @classmethod
-    def create_object(cls, start_point, end_point, program, canvas):
+    def create_object(cls,
+                      start_point: Tuple[int, int],
+                      end_point: Tuple[int, int],
+                      program: Program,
+                      canvas: tk.Canvas):
         points = np.array([
             [start_point[0], start_point[1], 1],
         ])
@@ -84,21 +95,21 @@ class Ellipse(Object):
         rx = end_point[1] - start_point[1]
         return cls(program, canvas, points, rx, ry)
 
-    def draw(self, canvas_arr, color=DEFAULT_COLOR):
+    def draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int] = DEFAULT_COLOR):
         if color != DEFAULT_COLOR:
             self.color = color
         self.__draw(canvas_arr, self.color)
 
-    def move(self, xs, ys):
+    def move(self, xs: int, ys: int):
         super().move(xs, ys)
 
-    def scale(self, x, y):
+    def scale(self, x: float, y: float):
         super().scale(x, y)
 
-    def rotate(self, angle: int, point: Tuple[int, int] = None) -> None:
+    def rotate(self, angle: int, point: Tuple[int, int] = None):
         super().rotate(angle, point)
 
-    def __draw(self, canvas_arr, color):
+    def __draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int]):
         yc, xc = self.center_point
         rx, ry = self.rx, self.ry
         shifts = [(1, 1), (-1, 1), (1, -1), (-1, -1)]

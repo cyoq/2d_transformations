@@ -1,7 +1,10 @@
 import itertools
-from typing import Tuple
+from typing import Tuple, Type
+
+import tkinter as tk
 
 from pivot import *
+from program import Program
 
 DEFAULT_COLOR = (255, 0, 0)
 
@@ -10,7 +13,10 @@ counter = itertools.count()
 
 class Object:
 
-    def __init__(self, program, canvas, points, color=DEFAULT_COLOR):
+    def __init__(self, program: Program,
+                 canvas: tk.Canvas,
+                 points: np.ndarray,
+                 color: Tuple[int, int, int] = DEFAULT_COLOR):
         self.canvas_size = (int(canvas.cget("height")), int(canvas.cget("width")))
         self.points = points
         self.center_point = self.midpoint()
@@ -27,42 +33,46 @@ class Object:
         self.pivots = None
         self.choose_pivot(canvas, self.active_pivots)
 
-    def choose_pivot(self, canvas, pivot_type):
+    def choose_pivot(self, canvas: tk.Canvas, pivot_type: str):
         pass
 
     def manual_point_move(self, *args, **kwargs):
         pass
 
-    def radius(self):
+    def radius(self) -> int:
         pass
 
-    def midpoint(self):
+    def midpoint(self) -> Tuple[int, int]:
         pass
 
     def recalculate_pivots(self):
         pass
 
-    def is_inside(self, x, y):
+    def is_inside(self, x: int, y: int) -> bool:
         pass
 
-    def update_rotation_pivot(self, rotation_point):
+    def update_rotation_pivot(self, rotation_pivot: Pivot):
         pass
 
     def rotation_pivot_to_center(self):
         pass
 
     @classmethod
-    def create_object(cls, start_point, end_point, program, canvas):
+    def create_object(cls: Type["Object"],
+                      start_point: Tuple[int, int],
+                      end_point: Tuple[int, int],
+                      program: Program,
+                      canvas: tk.Canvas) -> Type["Object"]:
         pass
 
-    def draw(self, canvas_arr, color=DEFAULT_COLOR):
+    def draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int] = DEFAULT_COLOR):
         pass
 
     # def fill(self, color=DEFAULT_COLOR):
     #     pass
 
     # TODO: bug with move
-    def move(self, xs, ys):
+    def move(self, xs: int, ys: int):
         matrix = np.array([
             [1, 0, 0],
             [0, 1, 0],
@@ -81,7 +91,7 @@ class Object:
         self.center_point = self.midpoint()
         self.recalculate_pivots()
 
-    def scale(self, x, y):
+    def scale(self, x: float, y: float):
         # Scaling is done from (0, 0), so that figure won't move
         dx = np.min(self.points[:, 0])
         dy = np.min(self.points[:, 1])
@@ -109,7 +119,7 @@ class Object:
         self.center_point = self.midpoint()
         self.recalculate_pivots()
 
-    def rotate(self, angle: int, point: Tuple[int, int] = None) -> None:
+    def rotate(self, angle: int, point: Tuple[int, int] = None):
         """
         :param angle: angle by which object should be rotated, counting from the starting position, when angle is 0.
             Angle must be given in radians.
