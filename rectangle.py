@@ -83,7 +83,6 @@ class Rectangle(Object):
         self.recalculate_pivots()
 
     def rotation_pivot_to_center(self):
-        print(self.pivots)
         self.pivots[1].points[0] = self.center_point[0]
         self.pivots[1].points[1] = self.center_point[1]
 

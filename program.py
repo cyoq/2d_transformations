@@ -1,5 +1,6 @@
 import tkinter as tk
 from typing import Tuple, Type, Optional
+import webbrowser
 
 from PIL import Image, ImageTk
 
@@ -317,7 +318,14 @@ class Program(Observer):
 
         object_frame.grid(row=3, column=1, columnspan=6, rowspan=6, sticky=tk.NW)
 
-        self.canvas.bind("<ButtonPress-1>", self._on_mouse_down)
+        tk.Label(master, text="Created by: ", font=font_styles["bold"]) \
+            .grid(row=3, column=2, sticky=tk.S)
+
+        github = tk.Label(master, text="cyoq", font=font_styles["simple"], fg="blue", cursor="hand2")
+        github.grid(row=3, column=3, sticky=tk.S)
+        github.bind("<Button-1>", lambda e: webbrowser.open_new("https://github.com/cyoq"))
+
+        self.canvas.bind("<ButtonPress-1>", self.__on_mouse_down)
         self.canvas.bind("<B1-Motion>", self._on_mouse_motion)
         self.canvas.bind("<ButtonRelease-1>", self._on_mouse_release)
         self.update()
@@ -340,7 +348,7 @@ class Program(Observer):
 
         self.update()
 
-    def _on_mouse_down(self, e):
+    def __on_mouse_down(self, e):
         if self.is_object_creation[0]:
             self.start_x = e.x
             self.start_y = e.y
@@ -488,4 +496,4 @@ class Program(Observer):
                     self.canvas.create_text(p[1] + 10, p[0] - 10,
                                             text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red"))
 
-        print(self.canvas.find_all(), "length: ", len(self.canvas.find_all()))
+        # print(self.canvas.find_all(), "length: ", len(self.canvas.find_all()))
