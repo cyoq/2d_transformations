@@ -6,7 +6,6 @@ from pivot import *
 
 
 class Rectangle(Object):
-    _counter = itertools.count()
 
     def __init__(self,
                  program: "Program",
@@ -36,12 +35,19 @@ class Rectangle(Object):
             ]
         elif self.active_pivots == RP:
             radius = self.radius()
-            stationary_pivot = Pivot(canvas, self.center_point[0], self.center_point[1],
-                                     lambda x, y: None, stationary=True)
+            stationary_pivot = Pivot(canvas,
+                                     self.center_point[0],
+                                     self.center_point[1],
+                                     lambda x, y: None,
+                                     stationary=True)
 
-            self.pivots = [Pivot(canvas, self.center_point[0] + radius, self.center_point[1],
+            self.pivots = [Pivot(canvas,
+                                 self.center_point[0] + radius,
+                                 self.center_point[1],
                                  lambda a: self.rotate(a, point=self.center_point),
-                                 angle_based=True, rotation_pivot=stationary_pivot, distance_to_rot_pivot=radius),
+                                 angle_based=True,
+                                 rotation_pivot=stationary_pivot,
+                                 distance_to_rot_pivot=radius),
                            stationary_pivot
                            ]
         else:
@@ -129,7 +135,9 @@ class Rectangle(Object):
         if color != DEFAULT_COLOR:
             self.color = color
         for pp, p in zip(self.points, self.points[1:]):
-            Line.draw(canvas_arr, pp[0], pp[1], p[0], p[1], self.color)
+            Line.draw(self.canvas_width,
+                      self.canvas_height,
+                      canvas_arr, pp[0], pp[1], p[0], p[1], self.color)
 
     def is_inside(self, x: int, y: int) -> bool:
         if self.points[0, 0] <= x <= self.points[2, 0] and self.points[0, 1] <= y <= self.points[2, 1]:

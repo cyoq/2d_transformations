@@ -29,7 +29,7 @@ class Pivot(Observable):
         """
         Creates a pivot for controlling the object.
 
-        :param canvas: is used for drawing rectangles on the canvas
+        :param canvas: is used for drawing rectangles on the canvas_arr
         :param x: x coordinate
         :param y: y coordinate
         :param f: function which will be called when pivot is moved. By default gets called with 2 arguments: dy and dx.
@@ -48,7 +48,8 @@ class Pivot(Observable):
         self.width = width
         self.color = color
         self.canvas = canvas
-        self.canvas_size = (int(canvas.cget("height")), int(canvas.cget("width")))
+        self.canvas_height = int(canvas.cget("height"))
+        self.canvas_width = int(canvas.cget("width"))
         self.f = f
         self.angle_based = angle_based
         if angle_based:
@@ -71,7 +72,7 @@ class Pivot(Observable):
         # a queue for storing id of created rectangle which is used in motion binding
         self.history = deque()
         self.i = next(gen)
-        # a tag for canvas binding
+        # a tag for canvas_arr binding
         self.tag = "rec" + str(self.i)
 
         # id for last created rectangle
@@ -115,7 +116,7 @@ class Pivot(Observable):
             if not self.angle_based and not self.is_moving_on_line:
                 points = self.points
                 dx, dy = event.x - points[0], event.y - points[1]
-                if event.x + self.width < self.canvas_size[1] and event.y + self.width < self.canvas_size[0]:
+                if event.x + self.width < self.canvas_width and event.y + self.width < self.canvas_height:
                     points[0] = event.x
                     points[1] = event.y
                     points[2] = event.x + self.width
@@ -127,13 +128,13 @@ class Pivot(Observable):
             elif self.is_moving_on_line:
 
                 if self.axis == "x":
-                    if self.points[2] + self.width < self.canvas_size[1]:
+                    if self.points[2] + self.width < self.canvas_height:
                         dx = event.x - self.points[0]
                         self.points[0] = event.x
                         self.points[2] = event.x + self.width
                         self.f(dx)
                 elif self.axis == "y":
-                    if self.points[2] + self.width < self.canvas_size[0]:
+                    if self.points[2] + self.width < self.canvas_width:
                         dy = event.y - self.points[1]
                         self.points[1] = event.y
                         self.points[3] = event.y + self.width
@@ -150,7 +151,7 @@ class Pivot(Observable):
                 closest = (
                     cmidx + self.distance_to_rot_point * np.cos(angle),
                     cmidy + self.distance_to_rot_point * np.sin(angle))
-                if closest[0] + self.width < self.canvas_size[1] and closest[1] + self.width < self.canvas_size[0]:
+                if closest[0] + self.width < self.canvas_width and closest[1] + self.width < self.canvas_height:
                     self.points[0] = closest[0]
                     self.points[1] = closest[1]
                     self.points[2] = closest[0] + self.width

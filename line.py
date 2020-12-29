@@ -1,8 +1,20 @@
+from typing import Tuple
+
+import numpy as np
+
 
 class Line:
 
     @staticmethod
-    def draw(canvas, x_start, y_start, x_end, y_end, color=(255, 0, 0)):
+    def draw(canvas_width: int,
+             canvas_height: int,
+             canvas_arr: np.ndarray,
+             x_start: int,
+             y_start: int,
+             x_end: int,
+             y_end: int,
+             color: Tuple[int, int, int] = (255, 0, 0)):
+        """ Creates a line using Bresenham midpoint algorithm"""
         dx = abs(x_end - x_start)
         dy = abs(y_end - y_start)
 
@@ -23,7 +35,8 @@ class Line:
                     x += xs
                     pn = pn + 2 * dy
                 # place for drawing
-                canvas[x, y, :] = color
+                if x < canvas_height and y < canvas_width:
+                    canvas_arr[x, y, :] = color
         else:
             pn = 2 * dx - dy
             while y != y_end:
@@ -35,4 +48,5 @@ class Line:
                     y += ys
                     pn = pn + 2 * dx
                 # place for drawing
-                canvas[x, y, :] = color
+                if x < canvas_height and y < canvas_width:
+                    canvas_arr[x, y, :] = color

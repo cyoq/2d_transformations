@@ -17,15 +17,16 @@ class Object:
                  points: np.ndarray,
                  color: Tuple[int, int, int] = DEFAULT_COLOR):
         """
-        Creates an object, which can be seen on the canvas. It is possible to move, rotate and transform the object.
+        Creates an object, which can be seen on the canvas_arr. It is possible to move, rotate and transform the object.
 
 
         :param program: is used for registering the pivots as observables
         :param canvas: is used for drawing pivots
-        :param points: should describe the object structure in the canvas. It should be a numpy array where each row has 3 columns: [x y 1]
+        :param points: should describe the object structure in the canvas_arr. It should be a numpy array where each row has 3 columns: [x y 1]
         :param color: color which will be used for drawing the outlines of the object
         """
-        self.canvas_size = (int(canvas.cget("height")), int(canvas.cget("width")))
+        self.canvas_height = int(canvas.cget("height"))
+        self.canvas_width = int(canvas.cget("width"))
         self.points = points
         self.center_point = self.midpoint()
         self.active_pivots = MP
@@ -109,9 +110,9 @@ class Object:
 
     def draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int] = DEFAULT_COLOR):
         """
-        Method for drawing a shape on the numpy array as a canvas
+        Method for drawing a shape on the numpy array as a canvas_arr
 
-        :param canvas_arr: numpy array as canvas which represents the whole scene
+        :param canvas_arr: numpy array as canvas_arr which represents the whole scene
         :param color: color, which will be used for outlines
         """
         pass
@@ -132,12 +133,6 @@ class Object:
         ])
 
         self.points = self.points @ matrix
-        max = np.max(self.points)
-        min = np.min(self.points)
-
-        if min <= 0 or max >= self.canvas_size[0]:
-            self.points = self.points @ np.linalg.inv(matrix)
-            self.points = self.points.astype(int)
 
         self.start_points = self.points
         self.center_point = self.midpoint()
@@ -167,12 +162,6 @@ class Object:
         self.points[:, 0] += dx
         self.points[:, 1] += dy
 
-        max = np.max(self.points)
-        min = np.min(self.points)
-
-        if min <= 0 or max >= self.canvas_size[0]:
-            self.points = self.points @ np.linalg.inv(matrix)
-
         self.points = self.points.astype(int)
         self.start_points = self.points
         self.center_point = self.midpoint()
@@ -193,10 +182,9 @@ class Object:
             point_matrix[:, 0] *= point[0]
             point_matrix[:, 1] *= point[1]
 
-        old_angle = self.angle
         self.angle = np.rint(np.rad2deg(angle))
 
-        a = angle
+        a = -angle
 
         matrix = np.array([
             [np.cos(a), np.sin(a), 0],
@@ -209,11 +197,5 @@ class Object:
         else:
             self.points = point_matrix + ((self.start_points - point_matrix) @ matrix)
 
-        max = np.max(self.points)
-        min = np.min(self.points)
-
-        if min <= 0 or max >= self.canvas_size[0]:
-            self.points = (self.points - point_matrix) @ np.linalg.inv(matrix) + point_matrix
-            self.angle = old_angle
         # self.points = self.points.astype(np.int32)
         self.points = np.rint(self.points).astype(int)  # works well with a point in the rotation_pivot

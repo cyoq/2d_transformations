@@ -3,6 +3,7 @@ from typing import Type, List
 
 from PIL import Image, ImageTk
 
+from circle import Circle
 from consts import ROT_ANGLE
 from ellipse import Ellipse
 from object import Object
@@ -17,7 +18,7 @@ font_styles = {
 }
 
 # keys for accessing color dictionary
-CANVAS = "canvas"
+CANVAS = "canvas_arr"
 PIVOT = "pivot"
 LINE = "line"
 
@@ -75,8 +76,11 @@ class Program(Observer):
 
         self.objs[self.obj.id] = self.obj
 
-        ellipse = Ellipse(self, self.canvas, np.array([[400, 400, 1]]), 40, 100)
-        self.objs[ellipse.id] = ellipse
+        # ellipse = Ellipse(self, self.canvas_arr, np.array([[400, 400, 1]]), 40, 100)
+        # self.objs[ellipse.id] = ellipse
+
+        circle = Circle(self, self.canvas, np.array([[500, 400, 1]]), 100)
+        self.objs[circle.id] = circle
 
         self.img = ImageTk.PhotoImage(Image.fromarray(self.canvas_arr))
 
@@ -201,7 +205,7 @@ class Program(Observer):
         tk.Label(customization_frame, text="Customization: ", font=font_styles["heading"], foreground="red") \
             .grid(row=0, column=0, sticky=tk.NW, pady=1, columnspan=3)
         #
-        tk.Label(customization_frame, text="Change color of canvas: ", font=font_styles["bold"]) \
+        tk.Label(customization_frame, text="Change color of canvas_arr: ", font=font_styles["bold"]) \
             .grid(row=1, column=0, sticky=tk.NW)
         # R
         tk.Label(customization_frame, text="R: ", font=font_styles["bold"]) \
@@ -304,8 +308,8 @@ class Program(Observer):
             .grid(row=1, column=1, sticky=tk.NW, padx=3, pady=2)
 
         tk.Button(object_frame,
-                  text="Create a rectangle",
-                  command=lambda: self.__create_object(Rectangle),
+                  text="Create a circle",
+                  command=lambda: self.__create_object(Circle),
                   font=font_styles["simple"]) \
             .grid(row=1, column=2, sticky=tk.NW, padx=3, pady=2)
 
@@ -456,8 +460,8 @@ class Program(Observer):
         # TODO: Validation
         x = int(self.move_entry_x.get())
         y = int(self.move_entry_y.get())
-        is_x = self.__over9000(x, 0, self.w, self.move_entry_x)
-        is_y = self.__over9000(y, 0, self.h, self.move_entry_y)
+        is_x = self.__over9000(x, -self.w, self.w, self.move_entry_x)
+        is_y = self.__over9000(y, -self.h, self.h, self.move_entry_y)
         over = is_x or is_y
         if not over:
             self.current_object.move(y, x)
@@ -480,7 +484,7 @@ class Program(Observer):
             self.mid_label_var.set("({}, {})".format("-", "-"))
             self.angle_label_var.set("{} degrees".format("-"))
 
-        # It is needed to clear canvas items, so that no memory leak would appear
+        # It is needed to clear canvas_arr items, so that no memory leak would appear
         self.canvas.delete(self.image)
 
         self.canvas_arr = np.zeros((self.h, self.w, 3), dtype=np.uint8)
@@ -510,4 +514,4 @@ class Program(Observer):
                         self.canvas.create_text(p[1] + 10, p[0] - 10,
                                                 text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red"))
 
-        # print(self.canvas.find_all(), "length: ", len(self.canvas.find_all()))
+        # print(self.canvas_arr.find_all(), "length: ", len(self.canvas_arr.find_all()))

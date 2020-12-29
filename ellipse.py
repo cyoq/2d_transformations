@@ -74,9 +74,7 @@ class Ellipse(Object):
     def is_inside(self, x: int, y: int) -> bool:
         dx = (self.center_point[0] - x) / self.rx
         dy = (self.center_point[1] - y) / self.ry
-        if dx ** 2 + dy ** 2 <= 1:
-            return True
-        return False
+        return dx ** 2 + dy ** 2 <= 1
 
     @classmethod
     def create_object(cls,
@@ -106,17 +104,19 @@ class Ellipse(Object):
         super().rotate(angle, point)
 
     def __draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int]):
+        """ Draws an ellipse using midpoint Bresenham algorithm """
         yc, xc = self.center_point
         rx, ry = self.rx, self.ry
         shifts = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
         x, y = 0, ry
         p = ry ** 2 - rx ** 2 * ry + 0.25 * rx ** 2
-        # need to fill 2 pixels which are in a
-        # middle x and in a distance ry and -ry
-        canvas_arr[yc + y, xc + x, :] = color
-        canvas_arr[yc - y, xc - x, :] = color
 
         while ry ** 2 * x <= rx ** 2 * y:
+            for (xs, ys) in shifts:
+                xd, yd = xs * x + xc, ys * y + yc
+                if yd < self.canvas_height and xd < self.canvas_width:
+                    canvas_arr[yd, xd, :] = color
+
             if p < 0:
                 x += 1
                 p += 2 * ry ** 2 * x + ry ** 2
@@ -125,14 +125,15 @@ class Ellipse(Object):
                 y -= 1
                 p += 2 * ry ** 2 * x + ry ** 2 - 2 * rx ** 2 * y
 
-            for (xs, ys) in shifts:
-                xd, yd = xs * x + xc, ys * y + yc
-                canvas_arr[yd, xd, :] = color
-
         if ry ** 2 * x >= rx ** 2 * y:
             p = ry ** 2 * (x + 0.5) ** 2 + rx ** 2 * (y - 1) ** 2 - rx ** 2 * ry ** 2
 
         while y >= 0:
+            for (xs, ys) in shifts:
+                xd, yd = xs * x + xc, ys * y + yc
+                if yd < self.canvas_height and xd < self.canvas_width:
+                    canvas_arr[yd, xd, :] = color
+
             if p > 0:
                 y -= 1
                 p += -2 * rx ** 2 * y + rx ** 2
@@ -141,6 +142,4 @@ class Ellipse(Object):
                 y -= 1
                 p += -2 * rx ** 2 * y + rx ** 2 + 2 * ry ** 2 * x
 
-            for (xs, ys) in shifts:
-                xd, yd = xs * x + xc, ys * y + yc
-                canvas_arr[yd, xd, :] = color
+
