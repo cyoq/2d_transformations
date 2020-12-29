@@ -1,22 +1,30 @@
 import itertools
-from typing import Tuple, Type
-
-import tkinter as tk
+from typing import Type
 
 from pivot import *
-from program import Program
 
 DEFAULT_COLOR = (255, 0, 0)
 
+# Global counter for object names, in order to differentiate them
 counter = itertools.count()
 
 
 class Object:
 
-    def __init__(self, program: Program,
+    def __init__(self,
+                 program: "Program",
                  canvas: tk.Canvas,
                  points: np.ndarray,
                  color: Tuple[int, int, int] = DEFAULT_COLOR):
+        """
+        Creates an object, which can be seen on the canvas. It is possible to move, rotate and transform the object.
+
+
+        :param program: is used for registering the pivots as observables
+        :param canvas: is used for drawing pivots
+        :param points: should describe the object structure in the canvas. It should be a numpy array where each row has 3 columns: [x y 1]
+        :param color: color which will be used for drawing the outlines of the object
+        """
         self.canvas_size = (int(canvas.cget("height")), int(canvas.cget("width")))
         self.points = points
         self.center_point = self.midpoint()
@@ -34,45 +42,89 @@ class Object:
         self.choose_pivot(canvas, self.active_pivots)
 
     def choose_pivot(self, canvas: tk.Canvas, pivot_type: str):
+        """
+        Changes the pivots on the screen. Update should be used after calling this function.
+
+        :param pivot_type: might be MP - movement pivots, TP - transformation pivots, RP - rotation pivots
+        """
         pass
 
-    def manual_point_move(self, *args, **kwargs):
+    def manual_pivot_move(self, *args, **kwargs):
+        """
+        Implements the actions when pivots are moved on the screen.
+        Update should be used after calling this function.
+        """
         pass
 
     def radius(self) -> int:
+        """
+        Gives a radius of the object
+        """
         pass
 
     def midpoint(self) -> Tuple[int, int]:
+        """
+        Gives a middle point coordinates of the object.
+        """
         pass
 
     def recalculate_pivots(self):
+        """
+        Recalculates the positions of pivots. Update should be used after calling this function.
+        """
         pass
 
     def is_inside(self, x: int, y: int) -> bool:
+        """
+        Checks whether the coordinates are inside of the object
+        """
         pass
 
     def update_rotation_pivot(self, rotation_pivot: Pivot):
+        """
+        Updates current rotation pivot to the new one. Update should be used after calling this function.
+        :param rotation_pivot: it must be stationary to use in this method
+        """
         pass
 
     def rotation_pivot_to_center(self):
+        """
+        Returns stationary rotation pivot to the center of the object.
+        Update should be used after calling this function.
+        """
         pass
 
     @classmethod
     def create_object(cls: Type["Object"],
                       start_point: Tuple[int, int],
                       end_point: Tuple[int, int],
-                      program: Program,
+                      program: "Program",
                       canvas: tk.Canvas) -> Type["Object"]:
+        """
+        Creates a new object instance.
+
+        :param program: program is needed to register observers on pivots
+        """
         pass
 
     def draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int] = DEFAULT_COLOR):
-        pass
+        """
+        Method for drawing a shape on the numpy array as a canvas
 
-    # def fill(self, color=DEFAULT_COLOR):
-    #     pass
+        :param canvas_arr: numpy array as canvas which represents the whole scene
+        :param color: color, which will be used for outlines
+        """
+        pass
 
     # TODO: bug with move
     def move(self, xs: int, ys: int):
+        """
+        Moves the object using movement matrix.
+        Update should be used after calling this function.
+
+        :param xs: movement by x coordinate
+        :param ys: movement by y coordinate
+        """
         matrix = np.array([
             [1, 0, 0],
             [0, 1, 0],
@@ -92,7 +144,14 @@ class Object:
         self.recalculate_pivots()
 
     def scale(self, x: float, y: float):
-        # Scaling is done from (0, 0), so that figure won't move
+        """
+        Scales the object using scaling matrix.
+        Update should be used after calling this function.
+
+        :param x: scaling by x coordinate
+        :param y: scaling by y coordinate
+        """
+        # Scaling is done from (0, 0), so that figure won't move after scaling
         dx = np.min(self.points[:, 0])
         dy = np.min(self.points[:, 1])
         self.points[:, 0] -= dx
@@ -121,10 +180,12 @@ class Object:
 
     def rotate(self, angle: int, point: Tuple[int, int] = None):
         """
+        Rotates the object using rotation matrix.
+        Update should be used after calling this function.
+
         :param angle: angle by which object should be rotated, counting from the starting position, when angle is 0.
             Angle must be given in radians.
         :param point: point by which will be done rotation
-        :return: None
         """
 
         if point is not None:
@@ -135,7 +196,6 @@ class Object:
         old_angle = self.angle
         self.angle = np.rint(np.rad2deg(angle))
 
-        # a = np.deg2rad(self.angle)
         a = angle
 
         matrix = np.array([

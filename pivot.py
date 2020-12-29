@@ -1,7 +1,11 @@
+import tkinter as tk
 from collections import deque
+from typing import Callable, Tuple, Optional
+
 import numpy as np
-from observer import Observable
+
 from generator import gen
+from observer import Observable
 
 MP = "M"  # Move pivot
 TP = "T"  # Transformation pivot
@@ -10,9 +14,36 @@ RP = "R"  # Rotation pivot
 
 class Pivot(Observable):
 
-    def __init__(self, canvas, x, y, f, width: int = 8, color: str = "blue", stationary=False,
-                 angle_based=False, rotation_pivot: "Pivot" = None, distance_to_rot_point: int = None,
-                 is_moving_on_line=False, axis: str = None):
+    def __init__(self,
+                 canvas: tk.Canvas,
+                 x: int, y: int,
+                 f: Callable,
+                 width: int = 8,
+                 color: str = "blue",
+                 stationary: bool = False,
+                 angle_based: bool = False,
+                 rotation_pivot: "Pivot" = None,
+                 distance_to_rot_pivot: int = None,
+                 is_moving_on_line=False,
+                 axis: str = None):
+        """
+        Creates a pivot for controlling the object.
+
+        :param canvas: is used for drawing rectangles on the canvas
+        :param x: x coordinate
+        :param y: y coordinate
+        :param f: function which will be called when pivot is moved. By default gets called with 2 arguments: dy and dx.
+            When angle_based is on, it is called with 1 argument: angle. When is_moving_on_line is on, then it is called
+            with 1 argument: dx or dy, depending on the axis
+        :param width: the width of a rectangle
+        :param color: color of a rectangle
+        :param stationary: turns off the possibility of moving a pivot
+        :param angle_based: turns on the rotation movement mode, so that pivot can be moved only by circular trajectory
+        :param rotation_pivot: a pivot by which rotation will be done
+        :param distance_to_rot_pivot: distance to the rotation pivot from moving pivot
+        :param is_moving_on_line: restricts pivot movement only by one axis
+        :param axis: axis by which pivot can be moved. Use 'x' or 'y'
+        """
         super().__init__()
         self.width = width
         self.color = color
@@ -22,10 +53,10 @@ class Pivot(Observable):
         self.angle_based = angle_based
         if angle_based:
             self.angle = 0
-        if angle_based is True and rotation_pivot is None and distance_to_rot_point is None:
-            raise Exception("no rotation_pivot pivot and/or distance_to_rot_point for angle based movement!")
+        if angle_based is True and rotation_pivot is None and distance_to_rot_pivot is None:
+            raise Exception("no rotation_pivot pivot and/or distance_to_rot_pivot for angle based movement!")
         self.rotation_pivot = rotation_pivot
-        self.distance_to_rot_point = distance_to_rot_point
+        self.distance_to_rot_point = distance_to_rot_pivot
 
         if is_moving_on_line and axis is None:
             raise Exception("Cannot create moving on line pivot without an axis!")
@@ -37,14 +68,16 @@ class Pivot(Observable):
         y = y - width // 2
         self.points = [x, y, x + width, y + width]
 
+        # a queue for storing id of created rectangle which is used in motion binding
         self.history = deque()
         self.i = next(gen)
+        # a tag for canvas binding
         self.tag = "rec" + str(self.i)
 
-        self.rec = None
-        self.last_movable = None
-        # self.rec = self.canvas.create_rectangle(self.points[0], self.points[1], self.points[2],
-        #                                         self.points[3], fill=self.color, tag=self.tag)
+        # id for last created rectangle
+        self.rec: Optional[int] = None
+        # last moved rectangle id after mouse was pressed
+        self.last_movable: Optional[int] = None
 
         self.is_allowed_to_move = False
         self.stationary = stationary
@@ -55,20 +88,16 @@ class Pivot(Observable):
             # TODO: Bug with cursor
             self.canvas.tag_bind(self.tag, "<ButtonRelease-1>", self.clear_last_movable)
 
-        # self.canvas.bind('<B1-Motion>', self.move_rect)
-        # self.canvas.bind("<Motion>", self.check_hand)
-        # self.canvas.bind("<1>", self.mouse_down)
-
     def clear_last_movable(self, e):
         self.canvas.config(cursor="")
         self.last_movable = None
 
-    def midpoint(self):
+    def midpoint(self) -> Tuple[int, int]:
         midx, midy = (self.points[0] + self.points[2]) // 2, \
                      (self.points[1] + self.points[3]) // 2
         return midx, midy
 
-    def update_pos(self, x, y):
+    def update_pos(self, x: int, y: int):
         x = x - self.width // 2
         y = y - self.width // 2
         self.points = [x, y, x + self.width, y + self.width]
@@ -105,19 +134,22 @@ class Pivot(Observable):
                         self.f(dx)
                 elif self.axis == "y":
                     if self.points[2] + self.width < self.canvas_size[0]:
-                        dx = event.y - self.points[1]
+                        dy = event.y - self.points[1]
                         self.points[1] = event.y
                         self.points[3] = event.y + self.width
-                        self.f(dx)
+                        self.f(dy)
                 else:
                     raise Exception("Incorrect axis argument! Should be 'x' or 'y'.")
 
                 self.notify_observers()
+
             else:
                 cmidx, cmidy = self.rotation_pivot.midpoint()
                 angle = np.arctan2(event.y - cmidy, event.x - cmidx)
 
-                closest = (cmidx + self.distance_to_rot_point * np.cos(angle), cmidy + self.distance_to_rot_point * np.sin(angle))
+                closest = (
+                    cmidx + self.distance_to_rot_point * np.cos(angle),
+                    cmidy + self.distance_to_rot_point * np.sin(angle))
                 if closest[0] + self.width < self.canvas_size[1] and closest[1] + self.width < self.canvas_size[0]:
                     self.points[0] = closest[0]
                     self.points[1] = closest[1]
@@ -128,10 +160,10 @@ class Pivot(Observable):
                     self.angle = angle
                     self.notify_observers()
 
-    def draw(self, color):
+    def draw(self, color: Tuple[int, int, int]):
 
         self.rec = self.canvas.create_rectangle(self.points[0], self.points[1], self.points[2],
-                                                self.points[3], fill=self._from_rgb(color), tag=self.tag)
+                                                self.points[3], fill=Pivot._from_rgb(color), tag=self.tag)
 
         while len(self.history) != 1 and len(self.history) != 0:
             item = self.history.popleft()
@@ -150,15 +182,19 @@ class Pivot(Observable):
         else:
             self.is_allowed_to_move = False
 
-    def is_inside(self, x, y):
+    def is_inside(self, x: int, y: int) -> bool:
+        """
+        Checks whether the coordinates are inside of the object.
+        """
         if self.points[0] < x < self.points[2] and self.points[1] < y < self.points[3]:
             return True
         return False
 
-    def _from_rgb(self, rgb):
+    @staticmethod
+    def _from_rgb(rgb):
         """
-        https://stackoverflow.com/questions/51591456/can-i-use-rgb-in-tkinter/51592104
         translates an rgb tuple of int to a tkinter friendly color code
+        https://stackoverflow.com/questions/51591456/can-i-use-rgb-in-tkinter/51592104
         """
         r, g, b = rgb
         return f'#{r:02x}{g:02x}{b:02x}'

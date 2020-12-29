@@ -1,13 +1,9 @@
-import tkinter as tk
-from typing import Tuple
-
 from object import Object, DEFAULT_COLOR, counter
 from pivot import *
-from program import Program
 
 
 class Ellipse(Object):
-    def __init__(self, program: Program,
+    def __init__(self, program: "Program",
                  canvas: tk.Canvas,
                  points: np.ndarray,
                  rx: int,
@@ -30,12 +26,12 @@ class Ellipse(Object):
             self.pivots = [
                 Pivot(canvas, self.center_point[1],
                       self.center_point[0] - self.ry,
-                      lambda diff: self.manual_point_move(diff, "y"),
+                      lambda diff: self.manual_pivot_move(diff, "y"),
                       is_moving_on_line=True,
                       axis="y"),
                 Pivot(canvas, self.center_point[1] + self.rx,
                       self.center_point[0],
-                      lambda diff: self.manual_point_move(diff, "x"),
+                      lambda diff: self.manual_pivot_move(diff, "x"),
                       is_moving_on_line=True,
                       axis="x"),
             ]
@@ -49,7 +45,7 @@ class Ellipse(Object):
 
         self.recalculate_pivots()
 
-    def manual_point_move(self, diff: int, axis: str):
+    def manual_pivot_move(self, diff: int, axis: str):
         print(self.rx, self.ry)
         if axis == "y":
             if self.ry - diff > 0:
@@ -86,7 +82,7 @@ class Ellipse(Object):
     def create_object(cls,
                       start_point: Tuple[int, int],
                       end_point: Tuple[int, int],
-                      program: Program,
+                      program: "Program",
                       canvas: tk.Canvas):
         points = np.array([
             [start_point[0], start_point[1], 1],

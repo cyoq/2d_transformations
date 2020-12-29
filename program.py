@@ -1,12 +1,10 @@
-import tkinter as tk
-from typing import Tuple, Type, Optional, List
 import webbrowser
+from typing import Type, List
 
 from PIL import Image, ImageTk
 
 from consts import ROT_ANGLE
 from ellipse import Ellipse
-from generator import Generator
 from object import Object
 from observer import Observer
 from pivot import *

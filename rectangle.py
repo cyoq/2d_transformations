@@ -1,20 +1,18 @@
 import itertools
-from typing import Tuple
 
-import tkinter as tk
-
-from generator import gen
 from line import Line
 from object import Object, DEFAULT_COLOR, counter
 from pivot import *
-from program import Program
 
 
 class Rectangle(Object):
-
     _counter = itertools.count()
 
-    def __init__(self, program: Program, canvas: tk.Canvas, points: np.ndarray, color: Tuple[int, int, int] = DEFAULT_COLOR):
+    def __init__(self,
+                 program: "Program",
+                 canvas: tk.Canvas,
+                 points: np.ndarray,
+                 color: Tuple[int, int, int] = DEFAULT_COLOR):
         super().__init__(program, canvas, points, color=color)
         self.name = '%s_%d' % ("Rectangle", next(counter))
 
@@ -28,13 +26,13 @@ class Rectangle(Object):
                 # 2nd and 4th pivot has different arguments for manual_scale function
                 # because x and y's are swapped around
                 Pivot(canvas, self.points[0, 0], self.points[0, 1],
-                      lambda x, y: self.manual_point_move(x, y, 0)),
+                      lambda x, y: self.manual_pivot_move(x, y, 0)),
                 Pivot(canvas, self.points[1, 0], self.points[1, 1],
-                      lambda x, y: self.manual_point_move(x, y, 3)),
+                      lambda x, y: self.manual_pivot_move(x, y, 3)),
                 Pivot(canvas, self.points[2, 0], self.points[2, 1],
-                      lambda x, y: self.manual_point_move(x, y, 2)),
+                      lambda x, y: self.manual_pivot_move(x, y, 2)),
                 Pivot(canvas, self.points[3, 0], self.points[3, 1],
-                      lambda x, y: self.manual_point_move(x, y, 1)),
+                      lambda x, y: self.manual_pivot_move(x, y, 1)),
             ]
         elif self.active_pivots == RP:
             radius = self.radius()
@@ -43,7 +41,7 @@ class Rectangle(Object):
 
             self.pivots = [Pivot(canvas, self.center_point[0] + radius, self.center_point[1],
                                  lambda a: self.rotate(a, point=self.center_point),
-                                 angle_based=True, rotation_pivot=stationary_pivot, distance_to_rot_point=radius),
+                                 angle_based=True, rotation_pivot=stationary_pivot, distance_to_rot_pivot=radius),
                            stationary_pivot
                            ]
         else:
@@ -54,7 +52,7 @@ class Rectangle(Object):
 
         self.recalculate_pivots()
 
-    def manual_point_move(self, dx: int, dy: int, i: int):
+    def manual_pivot_move(self, dx: int, dy: int, i: int):
         if i == 0:
             self.points[i, 0] += dx
             self.points[i, 1] += dy
@@ -113,7 +111,11 @@ class Rectangle(Object):
             raise Exception("No such pivot pivot_type!")
 
     @classmethod
-    def create_object(cls, start_point: Tuple[int, int], end_point: Tuple[int, int], program: Program, canvas: tk.Canvas) -> "Rectangle":
+    def create_object(cls,
+                      start_point: Tuple[int, int],
+                      end_point: Tuple[int, int],
+                      program: "Program",
+                      canvas: tk.Canvas) -> "Rectangle":
         points = np.array([
             [start_point[0], start_point[1], 1],
             [end_point[0], start_point[1], 1],
@@ -147,8 +149,6 @@ class Rectangle(Object):
         if np.all(canvas_arr[x, y, :] != target_color):
             return
 
-        # canvas_arr[x, y, :] = replacement_color
-
         queue = deque()
         queue.append((x, y))
 
@@ -156,7 +156,6 @@ class Rectangle(Object):
             item = queue.pop()
 
             if np.all(canvas_arr[item[0], item[1]] == target_color):
-
                 canvas_arr[item[0], item[1]] = replacement_color
 
                 queue.append((item[0] - 1, item[1]))
