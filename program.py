@@ -26,30 +26,37 @@ LINE = "line"
 class Program(Observer):
 
     def __init__(self, master, dimensions: Tuple[int, int]):
-        self.object_iter = 0
-        self.master = master
+        self.object_counter = 0  # helper counter for iterating over objects when next object is needed
+        self.master = master  # the main widget
         self.master.title("2D Transformations")
 
-        self.text_coords: List[int] = []
-        self.show_coords: bool = False
-        self.angle: int = 0
+        self.text_coords = deque()  # queue for saving text, in order to delete it later
+        self.show_coords: bool = False  # boolean for checkbox
+        self.angle: int = 0  #
 
         # second argument is an object pivot_type
         self.is_object_creation: Tuple[bool, Optional[Type[Object]]] = (False, None)
+        # mouse coordinates when object creation starts
         self.start_x: int = 0
         self.start_y: int = 0
+        # last created object after the mouse was released
         self.last_created: Optional[Type[Object]] = None
 
+        # flag for allowing rotation pivot change when button is pressed
         self.is_rotation_pivot_change: bool = False
 
+        # image which is created by canvas
         self.image = None
+        # current object that program holds
         self.current_object: Optional[Type[Object]] = None
 
+        # saves entries for later validation
         self.color_entries = {
             CANVAS: [],
             PIVOT: [],
             LINE: []
         }
+
         self.colors = {
             CANVAS: (0, 0, 0),
             PIVOT: (0, 0, 255),
@@ -113,7 +120,7 @@ class Program(Observer):
         tk.Label(info_frame, text="Current angle: ", font=font_styles["bold"]) \
             .grid(row=3, column=0, sticky=tk.NW)
         self.angle_label_var = tk.StringVar()
-        self.angle_label_var.set("{} degrees".format(self.obj.angle))
+        self.angle_label_var.set("{} degrees".format(self.current_object.angle))
         self.object_angle_label = tk.Label(info_frame, textvariable=self.angle_label_var,
                                            font=font_styles["simple"])
         self.object_angle_label.grid(row=3, column=1, sticky=tk.W)
@@ -148,7 +155,7 @@ class Program(Observer):
                   font=font_styles["simple"]) \
             .grid(row=2, column=2, sticky=tk.NW, pady=3, padx=3)
 
-        tk.Label(operation_frame, text="Input manipulation", font=font_styles["bold"]) \
+        tk.Label(operation_frame, text="Manipulation with input: ", font=font_styles["bold"]) \
             .grid(row=3, column=0, sticky=tk.NW)
         tk.Label(operation_frame, text="Move by: ", font=font_styles["bold"]) \
             .grid(row=4, column=0, sticky=tk.NW)
@@ -350,14 +357,14 @@ class Program(Observer):
     def __next_object(self):
         n = len(self.objs)
         if n > 1:
-            self.object_iter %= n
+            self.object_counter %= n
             obj_list = list(self.objs.values())
-            if obj_list[self.object_iter] is self.current_object:
-                self.object_iter += 1
-                self.object_iter %= n
+            if obj_list[self.object_counter] is self.current_object:
+                self.object_counter += 1
+                self.object_counter %= n
 
-            self.current_object = obj_list[self.object_iter]
-            self.object_iter += 1
+            self.current_object = obj_list[self.object_counter]
+            self.object_counter += 1
             self.__update()
 
     def __delete_current_object(self):
@@ -410,6 +417,9 @@ class Program(Observer):
 
     def __change_rotation_pivot(self):
         self.is_rotation_pivot_change = True
+        if self.current_object.active_pivots != RP:
+            self.current_object.choose_pivot(self.canvas, RP)
+            self.__update()
 
     def __rotation_pivot_to_center(self):
         if self.current_object is not None:
@@ -453,11 +463,10 @@ class Program(Observer):
     def __scale(self):
         x = float(self.scale_entry_x.get())
         y = float(self.scale_entry_y.get())
-        self.current_object.scale(x, y)
+        self.current_object.scale(y, x)
         self.__update()
 
     def __move(self):
-        # TODO: Validation
         x = int(self.move_entry_x.get())
         y = int(self.move_entry_y.get())
         is_x = self.__over9000(x, -self.w, self.w, self.move_entry_x)
@@ -505,8 +514,9 @@ class Program(Observer):
                 p.draw(self.colors[PIVOT])
 
         if self.show_coords:
-            for t in self.text_coords:
-                self.canvas.delete(t)
+            while self.text_coords:
+                item = self.text_coords.pop()
+                self.canvas.delete(item)
 
             if self.current_object:
                 for p in self.current_object.points:

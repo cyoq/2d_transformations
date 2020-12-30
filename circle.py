@@ -45,7 +45,6 @@ class Circle(Object):
         self.recalculate_pivots()
 
     def manual_pivot_move(self, diff, *args):
-        print(diff, self.r)
         if self.r + diff > 0:
             self.r += diff
 

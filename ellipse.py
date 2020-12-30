@@ -15,7 +15,6 @@ class Ellipse(Object):
         self.name = '%s_%d' % ("Ellipse", next(counter))
 
     def choose_pivot(self, canvas: tk.Canvas, pivot_type: str):
-        print(self.center_point)
         canvas.delete("all")
         self.active_pivots = pivot_type
         if self.active_pivots == MP:

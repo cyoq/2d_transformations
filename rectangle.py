@@ -140,10 +140,11 @@ class Rectangle(Object):
                       canvas_arr, pp[0], pp[1], p[0], p[1], self.color)
 
     def is_inside(self, x: int, y: int) -> bool:
-        if self.points[0, 0] <= x <= self.points[2, 0] and self.points[0, 1] <= y <= self.points[2, 1]:
+        if self.start_points[0, 0] <= x <= self.start_points[2, 0] and \
+                self.start_points[0, 1] <= y <= self.start_points[2, 1]:
             return True
         for p in self.pivots:
-            if p.is_inside(x, y):
+            if p.is_inside(y, x):
                 return True
         return False
 

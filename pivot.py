@@ -187,9 +187,7 @@ class Pivot(Observable):
         """
         Checks whether the coordinates are inside of the object.
         """
-        if self.points[0] < x < self.points[2] and self.points[1] < y < self.points[3]:
-            return True
-        return False
+        return self.points[0] < x < self.points[2] and self.points[1] < y < self.points[3]
 
     @staticmethod
     def _from_rgb(rgb):
