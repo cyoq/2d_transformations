@@ -108,6 +108,7 @@ class Circle(Object):
         super().shear(x, y)
 
     def __draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int] = DEFAULT_COLOR):
+        """ Bresenham midpoint algorithm for drawing a circle on the canvas """
         shifts = [(-1, 1), (1, 1), (1, -1), (-1, -1)]
         xc, yc = self.points[0, 1], self.points[0, 0]
         x = 0
