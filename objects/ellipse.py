@@ -103,6 +103,9 @@ class Ellipse(Object):
     def rotate(self, angle: int, point: Tuple[int, int] = None):
         super().rotate(angle, point)
 
+    def shear(self, x: float, y: float):
+        super().shear(x, y)
+
     def __draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int]):
         """ Draws an ellipse using midpoint Bresenham algorithm """
         yc, xc = self.center_point

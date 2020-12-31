@@ -201,7 +201,13 @@ class Object:
         self.center_point = self.midpoint()
 
     def shear(self, x: float, y: float):
+        """
+        Shears the object using shearing matrix.
+        Update should be used after calling this function.
 
+        :param x: shearing by x coordinate
+        :param y: shearing by y coordinate
+        """
         # Shearing is done from (0, 0), so that figure won't move after scaling
         dx = np.min(self.points[:, 0])
         dy = np.min(self.points[:, 1])

@@ -104,6 +104,9 @@ class Circle(Object):
     def rotate(self, angle: int, point: Tuple[int, int] = None):
         super().rotate(angle, point)
 
+    def shear(self, x: float, y: float):
+        super().shear(x, y)
+
     def __draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int] = DEFAULT_COLOR):
         shifts = [(-1, 1), (1, 1), (1, -1), (-1, -1)]
         xc, yc = self.points[0, 1], self.points[0, 0]

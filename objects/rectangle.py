@@ -1,6 +1,6 @@
+from consts import DEFAULT_COLOR
 from objects.line import Line
 from objects.object import Object, counter
-from consts import DEFAULT_COLOR
 from utils.pivot import *
 
 
@@ -187,3 +187,6 @@ class Rectangle(Object):
 
     def rotate(self, angle: int, point: Tuple[int, int] = None):
         super().rotate(angle, point)
+
+    def shear(self, x: float, y: float):
+        super().shear(x, y)
