@@ -116,7 +116,7 @@ class Pivot(Observable):
             if not self.angle_based and not self.is_moving_on_line:
                 points = self.points
                 dx, dy = event.x - points[0], event.y - points[1]
-                if 0 < event.x + self.width < self.canvas_width and 0 < event.y + self.width < self.canvas_height:
+                if self.width < event.x + self.width < self.canvas_width and self.width < event.y + self.width < self.canvas_height:
                     points[0] = event.x
                     points[1] = event.y
                     points[2] = event.x + self.width

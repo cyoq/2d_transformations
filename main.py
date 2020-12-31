@@ -6,7 +6,8 @@ from program import Program
 def main():
     root = tk.Tk()
 
-    my_gui = Program(root, (800, 800))
+    # height and width
+    my_gui = Program(root, (950, 800))
     root.update()
     root.mainloop()
 

@@ -57,7 +57,7 @@ class Program(Observer):
             LINE: (255, 0, 0)
         }
 
-        self.h, self.w = 950, 800
+        self.h, self.w = dimensions[0], dimensions[1]
 
         self.canvas = tk.Canvas(master, width=self.w, height=self.h)
 
@@ -401,9 +401,10 @@ class Program(Observer):
 
     def __on_mouse_motion(self, e):
         if self.is_object_creation[0]:
-            cls = self.is_object_creation[1]
-            self.last_created = cls.create_object((self.start_y, self.start_x), (e.y, e.x), self, self.canvas)
-            self.__update()
+            if 0 < e.x < self.w and 0 < e.y < self.h:
+                cls = self.is_object_creation[1]
+                self.last_created = cls.create_object((self.start_y, self.start_x), (e.y, e.x), self, self.canvas)
+                self.__update()
 
     def __on_mouse_release(self, e):
         if self.is_object_creation[0]:

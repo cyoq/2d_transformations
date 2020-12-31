@@ -1,10 +1,10 @@
+import tkinter as tk
 from typing import Tuple, Type
 
 import numpy as np
-import tkinter as tk
 
-from objects.object import Object, counter
 from consts import DEFAULT_COLOR
+from objects.object import Object, counter
 from utils.pivot import Pivot, MP, TP, RP
 
 
@@ -66,7 +66,7 @@ class Circle(Object):
 
     def is_inside(self, x: int, y: int) -> bool:
         vector = (x - self.center_point[0], y - self.center_point[1])
-        dist = (vector[0]**2 + vector[1]**2)**0.5
+        dist = (vector[0] ** 2 + vector[1] ** 2) ** 0.5
         return dist <= self.r
 
     def update_rotation_pivot(self, rotation_pivot: Pivot):
@@ -86,7 +86,7 @@ class Circle(Object):
         ])
 
         vector = (start_point[0] - end_point[0], start_point[1] - end_point[1])
-        radius = (vector[0]**2 + vector[1]**2)**0.5
+        radius = (vector[0] ** 2 + vector[1] ** 2) ** 0.5
 
         return cls(program, canvas, points, radius)
 
@@ -118,7 +118,7 @@ class Circle(Object):
 
             for (xs, ys) in shifts:
                 xd, yd = xs * x + xc, ys * y + yc
-                if 0 < xd < self.canvas_width and 0 < yd < self.canvas_height:
+                if (0 < xd < self.canvas_width) and (0 < yd < self.canvas_height):
                     canvas_arr[yd, xd, :] = color
 
                 # Without centre coordinate difference two circle parts will be apart
@@ -129,7 +129,7 @@ class Circle(Object):
                 # So, in order to set two parts together, we calculate the difference between center coordinates
                 # Then we subtract it from x coordinate to go left, and add to y to go down
                 diff = xc - yc
-                if 0 < xd - diff < self.canvas_width and 0 < yd + diff < self.canvas_height:
+                if (0 < xd - diff < self.canvas_height) and (0 < yd + diff < self.canvas_width):
                     canvas_arr[xd - diff, yd + diff, :] = color
 
             if p < 0:
@@ -139,4 +139,3 @@ class Circle(Object):
                 x += 1
                 y -= 1
                 p = p + 2 * x - 2 * y + 1
-
