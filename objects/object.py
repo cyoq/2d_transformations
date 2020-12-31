@@ -1,9 +1,8 @@
 import itertools
 from typing import Type
 
-from pivot import *
-
-DEFAULT_COLOR = (255, 0, 0)
+from consts import DEFAULT_COLOR
+from utils.pivot import *
 
 # Global counter for object names, in order to differentiate them
 counter = itertools.count()
@@ -20,7 +19,7 @@ class Object:
         Creates an object, which can be seen on the canvas_arr. It is possible to move, rotate and transform the object.
 
 
-        :param program: is used for registering the pivots as observables
+        :param program: is used for registering the pivots as observables. Use class Program.
         :param canvas: is used for drawing pivots
         :param points: should describe the object structure in the canvas_arr. It should be a numpy array where each row has 3 columns: [x y 1]
         :param color: color which will be used for drawing the outlines of the object
@@ -30,7 +29,7 @@ class Object:
         self.points = points
         self.center_point = self.midpoint()
         self.active_pivots = MP
-        self.angle = 0
+        self.angle = 0  # angle of the object in degrees
         self.program = program
         self.color = color
         self.start_points = points
@@ -199,3 +198,4 @@ class Object:
 
         # self.points = self.points.astype(np.int32)
         self.points = np.rint(self.points).astype(int)  # works well with a point in the rotation_pivot
+        self.center_point = self.midpoint()

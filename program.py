@@ -1,21 +1,15 @@
 import webbrowser
-from typing import Type, List
+from typing import Type
 
 from PIL import Image, ImageTk
 
-from circle import Circle
-from consts import ROT_ANGLE
-from ellipse import Ellipse
-from object import Object
-from observer import Observer
-from pivot import *
-from rectangle import Rectangle
-
-font_styles = {
-    "simple": ("Courier", 11),
-    "heading": ("Courier", 12, "bold"),
-    "bold": ("Courier", 11, "bold")
-}
+from objects.circle import Circle
+from consts import ROT_ANGLE, font_styles
+from objects.ellipse import Ellipse
+from objects.object import Object
+from utils.observer import Observer
+from utils.pivot import *
+from objects.rectangle import Rectangle
 
 # keys for accessing color dictionary
 CANVAS = "canvas_arr"
@@ -82,12 +76,6 @@ class Program(Observer):
         self.current_object = self.obj
 
         self.objs[self.obj.id] = self.obj
-
-        # ellipse = Ellipse(self, self.canvas_arr, np.array([[400, 400, 1]]), 40, 100)
-        # self.objs[ellipse.id] = ellipse
-
-        circle = Circle(self, self.canvas, np.array([[500, 400, 1]]), 100)
-        self.objs[circle.id] = circle
 
         self.img = ImageTk.PhotoImage(Image.fromarray(self.canvas_arr))
 
@@ -449,8 +437,9 @@ class Program(Observer):
             self.__update()
 
     def __change_pivot_type(self, pivot_type: str) -> None:
-        self.current_object.choose_pivot(self.canvas, pivot_type)
-        self.__update()
+        if self.current_object is not None:
+            self.current_object.choose_pivot(self.canvas, pivot_type)
+            self.__update()
 
     def __rotate(self):
         angle = int(self.rot_entry.get())

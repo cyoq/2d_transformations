@@ -3,8 +3,9 @@ from typing import Tuple, Type
 import numpy as np
 import tkinter as tk
 
-from object import Object, DEFAULT_COLOR, counter
-from pivot import Pivot, MP, TP, RP
+from objects.object import Object, counter
+from consts import DEFAULT_COLOR
+from utils.pivot import Pivot, MP, TP, RP
 
 
 class Circle(Object):
@@ -114,7 +115,7 @@ class Circle(Object):
 
             for (xs, ys) in shifts:
                 xd, yd = xs * x + xc, ys * y + yc
-                if xd < self.canvas_width and yd < self.canvas_height:
+                if 0 < xd < self.canvas_width and 0 < yd < self.canvas_height:
                     canvas_arr[yd, xd, :] = color
 
                 # Without centre coordinate difference two circle parts will be apart
@@ -125,7 +126,7 @@ class Circle(Object):
                 # So, in order to set two parts together, we calculate the difference between center coordinates
                 # Then we subtract it from x coordinate to go left, and add to y to go down
                 diff = xc - yc
-                if xd - diff < self.canvas_width and yd + diff < self.canvas_height:
+                if 0 < xd - diff < self.canvas_width and 0 < yd + diff < self.canvas_height:
                     canvas_arr[xd - diff, yd + diff, :] = color
 
             if p < 0:

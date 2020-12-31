@@ -4,8 +4,7 @@ from typing import Callable, Tuple, Optional
 
 import numpy as np
 
-from generator import gen
-from observer import Observable
+from utils.observer import Observable
 
 MP = "M"  # Move pivot
 TP = "T"  # Transformation pivot
@@ -71,7 +70,8 @@ class Pivot(Observable):
 
         # a queue for storing id of created rectangle which is used in motion binding
         self.history = deque()
-        self.i = next(gen)
+        from objects.object import counter
+        self.i = next(counter)
         # a tag for canvas_arr binding
         self.tag = "rec" + str(self.i)
 
@@ -116,7 +116,7 @@ class Pivot(Observable):
             if not self.angle_based and not self.is_moving_on_line:
                 points = self.points
                 dx, dy = event.x - points[0], event.y - points[1]
-                if event.x + self.width < self.canvas_width and event.y + self.width < self.canvas_height:
+                if 0 < event.x + self.width < self.canvas_width and 0 < event.y + self.width < self.canvas_height:
                     points[0] = event.x
                     points[1] = event.y
                     points[2] = event.x + self.width
@@ -128,13 +128,13 @@ class Pivot(Observable):
             elif self.is_moving_on_line:
 
                 if self.axis == "x":
-                    if self.points[2] + self.width < self.canvas_height:
+                    if 0 < event.x + self.width < self.canvas_height:
                         dx = event.x - self.points[0]
                         self.points[0] = event.x
                         self.points[2] = event.x + self.width
                         self.f(dx)
                 elif self.axis == "y":
-                    if self.points[2] + self.width < self.canvas_width:
+                    if 0 < event.y + self.width < self.canvas_width:
                         dy = event.y - self.points[1]
                         self.points[1] = event.y
                         self.points[3] = event.y + self.width
@@ -151,7 +151,7 @@ class Pivot(Observable):
                 closest = (
                     cmidx + self.distance_to_rot_point * np.cos(angle),
                     cmidy + self.distance_to_rot_point * np.sin(angle))
-                if closest[0] + self.width < self.canvas_width and closest[1] + self.width < self.canvas_height:
+                if 0 < closest[0] + self.width < self.canvas_width and 0 < closest[1] + self.width < self.canvas_height:
                     self.points[0] = closest[0]
                     self.points[1] = closest[1]
                     self.points[2] = closest[0] + self.width

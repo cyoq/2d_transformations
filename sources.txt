@@ -2,3 +2,4 @@ https://stackoverflow.com/questions/9997869/interactive-plot-based-on-tkinter-an
 https://stackoverflow.com/questions/54605404/tkinter-how-to-change-cursor-over-canvas-items
 https://stackoverflow.com/questions/3996687/how-do-i-only-allow-dragging-in-a-circular-path
 https://en.wikipedia.org/wiki/Observer_pattern
+https://stackabuse.com/affine-image-transformations-in-python-with-numpy-pillow-and-opencv/#disqus_thread

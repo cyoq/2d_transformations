@@ -1,8 +1,10 @@
-from object import Object, DEFAULT_COLOR, counter
-from pivot import *
+from objects.object import Object, counter
+from consts import DEFAULT_COLOR
+from utils.pivot import *
 
 
 class Ellipse(Object):
+
     def __init__(self, program: "Program",
                  canvas: tk.Canvas,
                  points: np.ndarray,
@@ -45,7 +47,6 @@ class Ellipse(Object):
         self.recalculate_pivots()
 
     def manual_pivot_move(self, diff: int, axis: str):
-        print(self.rx, self.ry)
         if axis == "y":
             if self.ry - diff > 0:
                 self.ry -= diff
@@ -113,7 +114,7 @@ class Ellipse(Object):
         while ry ** 2 * x <= rx ** 2 * y:
             for (xs, ys) in shifts:
                 xd, yd = xs * x + xc, ys * y + yc
-                if yd < self.canvas_height and xd < self.canvas_width:
+                if 0 < yd < self.canvas_height and 0 < xd < self.canvas_width:
                     canvas_arr[yd, xd, :] = color
 
             if p < 0:
@@ -130,7 +131,7 @@ class Ellipse(Object):
         while y >= 0:
             for (xs, ys) in shifts:
                 xd, yd = xs * x + xc, ys * y + yc
-                if yd < self.canvas_height and xd < self.canvas_width:
+                if 0 < yd < self.canvas_height and 0 < xd < self.canvas_width:
                     canvas_arr[yd, xd, :] = color
 
             if p > 0:

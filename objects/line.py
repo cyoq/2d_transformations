@@ -35,7 +35,7 @@ class Line:
                     x += xs
                     pn = pn + 2 * dy
                 # place for drawing
-                if x < canvas_height and y < canvas_width:
+                if 0 < x < canvas_height and 0 < y < canvas_width:
                     canvas_arr[x, y, :] = color
         else:
             pn = 2 * dx - dy
@@ -48,5 +48,5 @@ class Line:
                     y += ys
                     pn = pn + 2 * dx
                 # place for drawing
-                if x < canvas_height and y < canvas_width:
+                if 0 < x < canvas_height and 0 < y < canvas_width:
                     canvas_arr[x, y, :] = color

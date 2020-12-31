@@ -1,8 +1,7 @@
-import itertools
-
-from line import Line
-from object import Object, DEFAULT_COLOR, counter
-from pivot import *
+from objects.line import Line
+from objects.object import Object, counter
+from consts import DEFAULT_COLOR
+from utils.pivot import *
 
 
 class Rectangle(Object):
@@ -91,13 +90,14 @@ class Rectangle(Object):
         self.pivots[1] = rotation_pivot
         self.recalculate_pivots()
 
+    # Warning a bug is here! In order to set rotation back to the object it is needed to use this function
+    # Then update the scene and use this function again
+    # Bug happens, because of rotation at any point
     def rotation_pivot_to_center(self):
-        self.pivots[1].points[0] = self.center_point[0]
-        self.pivots[1].points[1] = self.center_point[1]
-
-        self.pivots[0].f = lambda angle: self.rotate(angle, point=self.center_point)
         self.is_rot_pivot_changed = False
         self.recalculate_pivots()
+
+        self.pivots[0].f = lambda angle: self.rotate(angle, point=self.center_point)
 
     def recalculate_pivots(self):
         if self.active_pivots == MP:
