@@ -199,3 +199,26 @@ class Object:
         # self.points = self.points.astype(np.int32)
         self.points = np.rint(self.points).astype(int)  # works well with a point in the rotation_pivot
         self.center_point = self.midpoint()
+
+    def shear(self, x: float, y: float):
+
+        # Shearing is done from (0, 0), so that figure won't move after scaling
+        dx = np.min(self.points[:, 0])
+        dy = np.min(self.points[:, 1])
+        self.points[:, 0] -= dx
+        self.points[:, 1] -= dy
+
+        matrix = np.array([
+            [1, x, 0],
+            [y, 1, 0],
+            [0, 0, 1]
+        ])
+
+        self.points = self.points @ matrix
+        self.points[:, 0] += dx
+        self.points[:, 1] += dy
+
+        self.points = self.points.astype(int)
+        self.start_points = self.points
+        self.center_point = self.midpoint()
+        self.recalculate_pivots()

@@ -57,7 +57,7 @@ class Program(Observer):
             LINE: (255, 0, 0)
         }
 
-        self.h, self.w = 800, 800
+        self.h, self.w = 950, 800
 
         self.canvas = tk.Canvas(master, width=self.w, height=self.h)
 
@@ -148,7 +148,6 @@ class Program(Observer):
         tk.Label(operation_frame, text="Move by: ", font=font_styles["bold"]) \
             .grid(row=4, column=0, sticky=tk.NW)
 
-        # TODO: spacing
         # Move
         tk.Label(operation_frame, text="X: ", font=font_styles["bold"]) \
             .grid(row=4, column=1, sticky=tk.NW)
@@ -166,7 +165,7 @@ class Program(Observer):
             .grid(row=4, column=5, sticky=tk.N, padx=2, pady=2)
 
         # Scaling
-        tk.Label(operation_frame, text="Scale factor: ", font=font_styles["bold"]) \
+        tk.Label(operation_frame, text="Scale by: ", font=font_styles["bold"]) \
             .grid(row=5, column=0, sticky=tk.NW)
 
         tk.Label(operation_frame, text="X: ", font=font_styles["bold"]) \
@@ -183,16 +182,35 @@ class Program(Observer):
         tk.Button(operation_frame, text="Scale it!", command=self.__scale, font=font_styles["simple"]) \
             .grid(row=5, column=5, sticky=tk.NW)
 
+        # Shearing
+        tk.Label(operation_frame, text="Shear by: ", font=font_styles["bold"]) \
+            .grid(row=6, column=0, sticky=tk.NW)
+
+        tk.Label(operation_frame, text="X: ", font=font_styles["bold"]) \
+            .grid(row=6, column=1, sticky=tk.NW)
+        self.shear_entry_x = tk.Entry(operation_frame)
+        self.shear_entry_x.insert(0, 1)
+        self.shear_entry_x.grid(row=6, column=2)
+
+        tk.Label(operation_frame, text="Y: ", font=font_styles["bold"]) \
+            .grid(row=6, column=3, sticky=tk.NW)
+        self.shear_entry_y = tk.Entry(operation_frame)
+        self.shear_entry_y.insert(0, 1)
+        self.shear_entry_y.grid(row=6, column=4)
+
+        tk.Button(operation_frame, text="Shear it!", command=self.__shear, font=font_styles["simple"]) \
+            .grid(row=6, column=5, sticky=tk.NW)
+
         # Rotation
         tk.Label(operation_frame, text="Rotation angle(in degrees): ", font=font_styles["bold"]) \
-            .grid(row=6, column=0, sticky=tk.NW)
+            .grid(row=7, column=0, sticky=tk.NW)
         self.rot_entry = tk.Entry(operation_frame)
         self.rot_entry.insert(0, ROT_ANGLE)
-        self.rot_entry.grid(row=6, column=1)
+        self.rot_entry.grid(row=7, column=1)
         tk.Button(operation_frame, text="Rotate it!", command=self.__rotate, font=font_styles["simple"]) \
-            .grid(row=6, column=2, sticky=tk.NW)
+            .grid(row=7, column=2, sticky=tk.NW)
 
-        operation_frame.grid(row=1, column=1, columnspan=6, rowspan=7, sticky=tk.NW)
+        operation_frame.grid(row=1, column=1, columnspan=6, rowspan=8, sticky=tk.NW)
 
         # Customization frame
         customization_frame = tk.Frame(master)
@@ -453,6 +471,12 @@ class Program(Observer):
         x = float(self.scale_entry_x.get())
         y = float(self.scale_entry_y.get())
         self.current_object.scale(y, x)
+        self.__update()
+
+    def __shear(self):
+        x = float(self.shear_entry_x.get())
+        y = float(self.shear_entry_y.get())
+        self.current_object.shear(y, x)
         self.__update()
 
     def __move(self):
