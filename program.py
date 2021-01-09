@@ -117,11 +117,15 @@ class Program(Observer):
                   font=font_styles["simple"]) \
             .grid(row=4, column=0, pady=2, sticky=tk.NW)
 
+        tk.Button(info_frame, text="Object to the screen center", command=self.__current_object_to_center,
+                  font=font_styles["simple"])\
+            .grid(row=5, column=0, pady=2, sticky=tk.NW)
+
         self.needs_text_coords = tk.IntVar()
         self.needs_text_coords.set(0)
         self.checkbox = tk.Checkbutton(info_frame, text="Show coordinates?", font=font_styles["simple"],
                                        variable=self.needs_text_coords, command=self.__check_show_coords)
-        self.checkbox.grid(row=5, column=0, sticky=tk.NW)
+        self.checkbox.grid(row=6, column=0, sticky=tk.NW)
 
         info_frame.grid(row=0, column=1, columnspan=3, rowspan=6, sticky=tk.NW)
 
@@ -326,17 +330,45 @@ class Program(Observer):
                   font=font_styles["simple"]) \
             .grid(row=1, column=2, sticky=tk.NW, padx=3, pady=2)
 
-        tk.Button(object_frame,
-                  text="Change rotation pivot",
-                  command=self.__change_rotation_pivot,
-                  font=font_styles["simple"]) \
-            .grid(row=2, column=0, sticky=tk.NW, padx=3, pady=2)
+        tk.Label(object_frame, text="Rotation pivot: ", font=font_styles["heading"], foreground="red")\
+            .grid(row=2, column=0, sticky=tk.NW, pady=2)
+
+        tk.Label(object_frame, text="Rotation pivot coordinates: ", font=font_styles["bold"]) \
+            .grid(row=3, column=0, sticky=tk.NW)
+        self.rot_coords_label_var = tk.StringVar()
+        self.rot_coords_label_var.set("(-, -)")
+        self.mid_coords = tk.Label(object_frame, textvariable=self.rot_coords_label_var, font=font_styles["simple"])
+        self.mid_coords.grid(row=3, column=1, sticky=tk.W)
+
+        # Change rotation pivot
+        tk.Label(object_frame, text="Rotation pivot to: ", font=font_styles["bold"]) \
+            .grid(row=4, column=0, sticky=tk.NW)
+
+        tk.Label(object_frame, text="X: ", font=font_styles["bold"]) \
+            .grid(row=4, column=1, sticky=tk.NW)
+        self.rot_pivot_entry_x = tk.Entry(object_frame)
+        self.rot_pivot_entry_x.insert(0, 1)
+        self.rot_pivot_entry_x.grid(row=4, column=2)
+
+        tk.Label(object_frame, text="Y: ", font=font_styles["bold"]) \
+            .grid(row=4, column=3, sticky=tk.NW)
+        self.rot_pivot_entry_y = tk.Entry(object_frame)
+        self.rot_pivot_entry_y.insert(0, 1)
+        self.rot_pivot_entry_y.grid(row=4, column=4)
+        tk.Button(object_frame, text="Change it!", command=self.__change_rotation_pivot, font=font_styles["simple"]) \
+            .grid(row=4, column=5, sticky=tk.NW)
 
         tk.Button(object_frame,
-                  text="Rotation pivot to object's center",
+                  text="Change rot pivot by mouse",
+                  command=self.__change_rotation_pivot_manual,
+                  font=font_styles["simple"]) \
+            .grid(row=5, column=0, sticky=tk.NW, padx=3, pady=2)
+
+        tk.Button(object_frame,
+                  text="Rot pivot to object's center",
                   command=self.__rotation_pivot_to_center,
                   font=font_styles["simple"]) \
-            .grid(row=2, column=1, sticky=tk.NW, padx=3, pady=2)
+            .grid(row=5, column=1, sticky=tk.NW, padx=3, pady=2)
 
         object_frame.grid(row=3, column=1, columnspan=6, rowspan=6, sticky=tk.NW)
 
@@ -384,6 +416,16 @@ class Program(Observer):
 
             self.__update()
 
+    def __current_object_to_center(self):
+        cx = self.w // 2
+        cy = self.h // 2
+        x = self.current_object.center_point[1]
+        y = self.current_object.center_point[0]
+        dx = cx - x
+        dy = cy - y
+        self.current_object.move(dy, dx)
+        self.__update()
+
     def __on_mouse_down(self, e):
         if self.is_object_creation[0]:
             self.start_x = e.x
@@ -422,10 +464,25 @@ class Program(Observer):
             self.is_rotation_pivot_change = False
             self.__update()
 
-    def __change_rotation_pivot(self):
+    def __change_rotation_pivot_manual(self):
         self.is_rotation_pivot_change = True
         if self.current_object.active_pivots != RP:
             self.current_object.choose_pivot(self.canvas, RP)
+            self.__update()
+
+    def __change_rotation_pivot(self):
+        if self.current_object.active_pivots != RP:
+            self.current_object.choose_pivot(self.canvas, RP)
+            self.__update()
+
+        x = int(self.rot_pivot_entry_x.get())
+        y = int(self.rot_pivot_entry_y.get())
+        is_x = self.__over9000(x, 0, self.w, self.rot_pivot_entry_x)
+        is_y = self.__over9000(y, 0, self.h, self.rot_pivot_entry_y)
+        over = is_x or is_y
+        if not over:
+            new_rot_pivot = Pivot(self.canvas, x, y, lambda x, y: None, stationary=True)
+            self.current_object.update_rotation_pivot(new_rot_pivot)
             self.__update()
 
     def __rotation_pivot_to_center(self):
@@ -502,10 +559,16 @@ class Program(Observer):
             self.mid_label_var.set("({}, {})".format(midy, midx))
 
             self.angle_label_var.set("{} degrees".format(int(self.current_object.angle)))
+            if self.current_object.active_pivots == RP:
+                pivot = self.current_object.pivots[1]
+                coords = pivot.points[:2]
+                self.rot_coords_label_var.set("({}, {})".format(coords[0] + pivot.width // 2,
+                                                                coords[1] + pivot.width // 2))
         else:
             self.object_name_label_var.set("-")
             self.mid_label_var.set("({}, {})".format("-", "-"))
             self.angle_label_var.set("{} degrees".format("-"))
+            self.rot_coords_label_var.set("(-, -)")
 
         # It is needed to clear canvas_arr items, so that no memory leak would appear
         self.canvas.delete(self.image)
@@ -538,4 +601,5 @@ class Program(Observer):
                         self.canvas.create_text(p[1] + 10, p[0] - 10,
                                                 text="({}, {})".format(p[1], p[0]), font="Times 11", fill="red"))
 
+        # A line for detecting memory leak
         # print(self.canvas_arr.find_all(), "length: ", len(self.canvas_arr.find_all()))
