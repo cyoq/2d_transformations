@@ -86,6 +86,7 @@ class Rectangle(Object):
             raise Exception("Pivot must be stationary!")
         self.pivots[0].rotation_pivot = rotation_pivot
         points = rotation_pivot.points
+        # self.start_points = self.points
         self.pivots[0].f = lambda angle: self.rotate(angle, point=(points[1], points[2]))
         self.pivots[1] = rotation_pivot
         self.recalculate_pivots()
@@ -95,7 +96,9 @@ class Rectangle(Object):
     # Bug happens, because of rotation at any point
     def rotation_pivot_to_center(self):
         self.is_rot_pivot_changed = False
+        self.points = self.start_points
         self.recalculate_pivots()
+        # self.center_point = self.midpoint()
 
         self.pivots[0].f = lambda angle: self.rotate(angle, point=self.center_point)
 

@@ -151,7 +151,7 @@ class Pivot(Observable):
                 closest = (
                     cmidx + self.distance_to_rot_point * np.cos(angle),
                     cmidy + self.distance_to_rot_point * np.sin(angle))
-                if 0 < closest[0] + self.width < self.canvas_width and 0 < closest[1] + self.width < self.canvas_height:
+                if 0 < closest[0] + self.width < self.canvas_width and 0 < closest[1] < self.canvas_height:
                     self.points[0] = closest[0]
                     self.points[1] = closest[1]
                     self.points[2] = closest[0] + self.width

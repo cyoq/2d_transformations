@@ -116,7 +116,6 @@ class Object:
         """
         pass
 
-    # TODO: bug with move
     def move(self, xs: int, ys: int):
         """
         Moves the object using movement matrix.
@@ -198,7 +197,7 @@ class Object:
 
         # self.points = self.points.astype(np.int32)
         self.points = np.rint(self.points).astype(int)  # works well with a point in the rotation_pivot
-        self.center_point = self.midpoint()
+        # self.center_point = self.midpoint()
 
     def shear(self, x: float, y: float):
         """
