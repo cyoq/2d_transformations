@@ -109,12 +109,12 @@ class Ellipse(Object):
     def __draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int]):
         """ Draws an ellipse using midpoint Bresenham algorithm """
         yc, xc = self.center_point
-        rx, ry = self.rx, self.ry
+        rx, ry = np.int64(self.rx), np.int64(self.ry)
         shifts = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
-        x, y = 0, ry
+        x, y = np.int64(0), np.int64(ry)
         p = ry ** 2 - rx ** 2 * ry + 0.25 * rx ** 2
 
-        while ry ** 2 * x <= rx ** 2 * y:
+        while ry ** 2 * x < rx ** 2 * y:
             for (xs, ys) in shifts:
                 xd, yd = xs * x + xc, ys * y + yc
                 if 0 < yd < self.canvas_height and 0 < xd < self.canvas_width:
@@ -144,5 +144,4 @@ class Ellipse(Object):
                 x += 1
                 y -= 1
                 p += -2 * rx ** 2 * y + rx ** 2 + 2 * ry ** 2 * x
-
 

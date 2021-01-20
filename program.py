@@ -559,7 +559,7 @@ class Program(Observer):
             self.mid_label_var.set("({}, {})".format(midy, midx))
 
             self.angle_label_var.set("{} degrees".format(int(self.current_object.angle)))
-            if self.current_object.active_pivots == RP:
+            if self.current_object.active_pivots == RP and type(self.current_object).__name__ == "Rectangle":
                 pivot = self.current_object.pivots[1]
                 coords = pivot.points[:2]
                 self.rot_coords_label_var.set("({}, {})".format(coords[0] + pivot.width // 2,

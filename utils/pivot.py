@@ -128,13 +128,13 @@ class Pivot(Observable):
             elif self.is_moving_on_line:
 
                 if self.axis == "x":
-                    if 0 < event.x + self.width < self.canvas_height:
+                    if 0 < event.x + self.width < self.canvas_width:
                         dx = event.x - self.points[0]
                         self.points[0] = event.x
                         self.points[2] = event.x + self.width
                         self.f(dx)
                 elif self.axis == "y":
-                    if 0 < event.y + self.width < self.canvas_width:
+                    if 0 < event.y < self.canvas_height:
                         dy = event.y - self.points[1]
                         self.points[1] = event.y
                         self.points[3] = event.y + self.width
