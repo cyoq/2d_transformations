@@ -72,8 +72,8 @@ class Ellipse(Object):
                                       self.center_point[0])
 
     def is_inside(self, x: int, y: int) -> bool:
-        dx = (self.center_point[0] - x) / self.rx
-        dy = (self.center_point[1] - y) / self.ry
+        dx = (self.center_point[0] - x) / self.ry
+        dy = (self.center_point[1] - y) / self.rx
         return dx ** 2 + dy ** 2 <= 1
 
     @classmethod
@@ -85,8 +85,8 @@ class Ellipse(Object):
         points = np.array([
             [start_point[0], start_point[1], 1],
         ])
-        ry = end_point[0] - start_point[0]
-        rx = end_point[1] - start_point[1]
+        ry = np.abs(end_point[0] - start_point[0])
+        rx = np.abs(end_point[1] - start_point[1])
         return cls(program, canvas, points, rx, ry)
 
     def draw(self, canvas_arr: np.ndarray, color: Tuple[int, int, int] = DEFAULT_COLOR):
